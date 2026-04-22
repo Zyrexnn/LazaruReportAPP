@@ -15,9 +15,10 @@ function BookmarkSkeleton() {
   const colorScheme = useColorScheme() ?? 'light';
   const colors = Colors[colorScheme];
   return (
-    <View style={{ paddingHorizontal: 20, paddingTop: 28, backgroundColor: colors.background, flex: 1 }}>
-      <SkeletonBlock height={220} radius={28} style={{ marginBottom: 16 }} />
-      <SkeletonBlock height={220} radius={28} />
+    <View style={{ paddingHorizontal: 20, paddingTop: 60, backgroundColor: colors.background, flex: 1 }}>
+      <SkeletonBlock height={120} radius={12} style={{ marginBottom: 16 }} />
+      <SkeletonBlock height={120} radius={12} style={{ marginBottom: 16 }} />
+      <SkeletonBlock height={120} radius={12} />
     </View>
   );
 }
@@ -39,8 +40,13 @@ export default function BookmarksScreen() {
 
   const bookmarks = (bookmarksQuery.data ?? []).map<NewsArticle>((item) => ({
     ...item,
-    provider: 'marketaux',
+    provider: 'marketaux', // fallback provider
   }));
+
+  const openArticle = async (article: NewsArticle) => {
+    const { openBrowserAsync } = await import('expo-web-browser');
+    await openBrowserAsync(article.contentUrl);
+  };
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
@@ -52,30 +58,26 @@ export default function BookmarksScreen() {
           <RefreshControl 
             refreshing={bookmarksQuery.isRefetching} 
             onRefresh={bookmarksQuery.refetch} 
-            tintColor={colors.gold} 
+            tintColor={colors.accent} 
           />
         }
         contentContainerStyle={[styles.content, { backgroundColor: colors.background }]}
       ListHeaderComponent={
         <View style={styles.header}>
-          <Text style={[styles.kicker, { color: colors.icon }]}>Saved</Text>
-          <Text style={[styles.title, { color: colors.text }]}>Bookmarks</Text>
+          <Text style={[styles.title, { color: colors.primary }]}>Read Later</Text>
         </View>
       }
       ListEmptyComponent={
         <View style={styles.emptyState}>
-          <Text style={[styles.emptyTitle, { color: colors.text }]}>No bookmarks yet</Text>
-          <Text style={[styles.emptyBody, { color: colors.icon }]}>Save stories to read later</Text>
+          <Text style={[styles.emptyTitle, { color: colors.primary }]}>No bookmarks yet</Text>
+          <Text style={[styles.emptyBody, { color: colors.secondary }]}>Save stories to read later</Text>
         </View>
       }
       renderItem={({ item }) => (
         <NewsCard
           article={item}
           isBookmarked
-          onPress={() => {
-            setSelectedArticle(item);
-            router.push({ pathname: '/news/[id]', params: { id: item.id } });
-          }}
+          onPress={() => openArticle(item)}
           onToggleBookmark={async () => {
             await removeBookmark(item.id);
             await queryClient.invalidateQueries({ queryKey: ['bookmarks'] });
@@ -89,38 +91,34 @@ export default function BookmarksScreen() {
 
 const styles = StyleSheet.create({
   content: {
-    paddingHorizontal: 16,
-    paddingTop: 60,
-    paddingBottom: 40,
+    paddingHorizontal: 20,
+    paddingTop: 64,
+    paddingBottom: 100,
   },
   header: {
-    marginBottom: 24,
-  },
-  kicker: {
-    fontSize: 13,
-    fontWeight: '400',
-    marginBottom: 4,
+    marginBottom: 32,
   },
   title: {
     fontSize: 32,
     lineHeight: 38,
-    letterSpacing: -0.5,
-    fontWeight: '700',
+    letterSpacing: -1,
+    fontWeight: '900',
   },
   emptyState: {
     paddingVertical: 120,
     alignItems: 'center',
-    gap: 8,
+    gap: 12,
   },
   emptyTitle: {
-    fontSize: 17,
-    fontWeight: '600',
-    letterSpacing: -0.4,
+    fontSize: 20,
+    fontWeight: '800',
+    letterSpacing: -0.5,
   },
   emptyBody: {
-    fontSize: 15,
+    fontSize: 16,
     textAlign: 'center',
     maxWidth: '80%',
-    lineHeight: 20,
+    lineHeight: 22,
+    fontWeight: '500',
   },
 });

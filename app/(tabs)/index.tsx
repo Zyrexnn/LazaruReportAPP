@@ -5,40 +5,37 @@ import { NewsCard } from '@/src/components/NewsCard';
 import { addBookmark, getBookmarks, removeBookmark } from '@/src/services/db';
 import { fetchUnifiedNews } from '@/src/services/newsApi';
 import { useNewsStore } from '@/src/store/useNewsStore';
+import { useThemeStore } from '@/src/store/useThemeStore';
 import { NewsArticle } from '@/src/types/news';
 import { FlashList } from '@shopify/flash-list';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { Clock, Search, TrendingUp } from 'lucide-react-native';
+import { ChevronRight, Search, Sun, Moon } from 'lucide-react-native';
 import { useMemo, useState } from 'react';
-import { Image, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Image, Pressable, RefreshControl, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 
 const bookmarkQueryKey = ['bookmarks'];
 const newsQueryKey = ['news-feed'];
+
+const CATEGORIES = [
+  { id: 'all', label: 'All' },
+  { id: 'geopolitics', label: 'Geopolitics' },
+  { id: 'ai_tech', label: 'AI & Tech' },
+  { id: 'crypto', label: 'Crypto' },
+  { id: 'wall_street', label: 'Wall Street' },
+  { id: 'startups', label: 'Startups' },
+];
 
 function NewsSkeleton() {
   const colorScheme = useColorScheme() ?? 'light';
   const colors = Colors[colorScheme];
   return (
     <View style={{ paddingHorizontal: 16, backgroundColor: colors.background, flex: 1, paddingTop: 60 }}>
-      <SkeletonBlock height={80} radius={12} style={{ marginBottom: 20 }} />
+      <SkeletonBlock height={40} radius={8} style={{ marginBottom: 20 }} />
       <SkeletonBlock height={200} radius={12} style={{ marginBottom: 12 }} />
       <SkeletonBlock height={140} radius={12} style={{ marginBottom: 12 }} />
       <SkeletonBlock height={140} radius={12} />
-    </View>
-  );
-}
-
-function BreakingBanner() {
-  const colorScheme = useColorScheme() ?? 'light';
-  const colors = Colors[colorScheme];
-  
-  return (
-    <View style={[styles.breakingBanner, { backgroundColor: colors.error }]}>
-      <TrendingUp size={16} color="#FFFFFF" strokeWidth={2} />
-      <Text style={styles.breakingText}>LIVE</Text>
-      <Text style={styles.breakingMessage}>Markets updating in real-time</Text>
     </View>
   );
 }
@@ -49,12 +46,15 @@ export default function HomeScreen() {
   const { setSelectedArticle } = useNewsStore();
   const colorScheme = useColorScheme() ?? 'light';
   const colors = Colors[colorScheme];
-  const [category, setCategory] = useState<'all' | 'markets' | 'crypto' | 'tech'>('all');
+  const { toggleTheme } = useThemeStore();
+  const [category, setCategory] = useState<string>('all');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isSearching, setIsSearching] = useState(false);
 
   const newsQuery = useQuery({
     queryKey: newsQueryKey,
     queryFn: () => fetchUnifiedNews(),
-    refetchInterval: 60000, // Refresh every minute
+    refetchInterval: 60000,
   });
 
   const bookmarksQuery = useQuery({
@@ -68,24 +68,38 @@ export default function HomeScreen() {
   );
 
   const filteredNews = useMemo(() => {
-    const allNews = newsQuery.data ?? [];
-    if (category === 'all') return allNews;
+    let allNews = newsQuery.data ?? [];
     
-    // Simple filtering based on keywords in title/summary
-    const keywords: Record<string, string[]> = {
-      markets: ['market', 'stock', 'trading', 'wall street', 'dow', 'nasdaq', 's&p'],
-      crypto: ['crypto', 'bitcoin', 'ethereum', 'blockchain', 'btc', 'eth'],
-      tech: ['tech', 'technology', 'ai', 'software', 'apple', 'google', 'microsoft'],
-    };
+    // Ensure sorted by newest
+    allNews = [...allNews].sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime());
     
-    return allNews.filter(article => {
-      const text = `${article.title} ${article.summary}`.toLowerCase();
-      return keywords[category]?.some(keyword => text.includes(keyword));
-    });
-  }, [newsQuery.data, category]);
+    if (searchQuery.trim() !== '') {
+      const q = searchQuery.toLowerCase();
+      allNews = allNews.filter(article => 
+        article.title.toLowerCase().includes(q) || 
+        article.summary?.toLowerCase().includes(q) || 
+        article.source.toLowerCase().includes(q)
+      );
+    } else if (category !== 'all') {
+      const keywords: Record<string, string[]> = {
+        geopolitics: ['politics', 'geopolitics', 'world', 'election', 'war', 'government', 'biden', 'putin', 'china'],
+        ai_tech: ['tech', 'technology', 'ai', 'software', 'apple', 'google', 'microsoft', 'nvidia', 'openai', 'cyber'],
+        crypto: ['crypto', 'bitcoin', 'ethereum', 'btc', 'eth', 'solana', 'blockchain', 'binance', 'coinbase'],
+        wall_street: ['market', 'stock', 'trading', 'wall street', 'dow', 'nasdaq', 's&p', 'fed', 'inflation', 'economy'],
+        startups: ['startup', 'founder', 'funding', 'vc', 'venture', 'y combinator', 'seed', 'series'],
+      };
+      
+      allNews = allNews.filter(article => {
+        const text = `${article.title} ${article.summary}`.toLowerCase();
+        return keywords[category]?.some(keyword => text.includes(keyword));
+      });
+    }
+    return allNews;
+  }, [newsQuery.data, category, searchQuery]);
 
   const featured = filteredNews.slice(0, 1);
-  const latest = filteredNews.slice(1);
+  const topStories = filteredNews.slice(1, 5);
+  const readLater = filteredNews.slice(5);
 
   const toggleBookmark = async (article: NewsArticle) => {
     if (bookmarkedIds.has(article.id)) {
@@ -101,12 +115,10 @@ export default function HomeScreen() {
         summary: article.summary,
       });
     }
-
     await queryClient.invalidateQueries({ queryKey: bookmarkQueryKey });
   };
 
   const openArticle = async (article: NewsArticle) => {
-    // Open URL directly in browser
     const { openBrowserAsync } = await import('expo-web-browser');
     await openBrowserAsync(article.contentUrl);
   };
@@ -115,35 +127,41 @@ export default function HomeScreen() {
     return <NewsSkeleton />;
   }
 
+  const currentDate = new Date().toLocaleDateString('en-GB', { 
+    weekday: 'long', 
+    day: 'numeric', 
+    month: 'long' 
+  });
+
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
       <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
       
       <View style={[styles.header, { backgroundColor: colors.background }]}>
         <View style={styles.headerTop}>
-          <Image 
-            source={require('@/assets/logolazarusreport.png')}
-            style={styles.logo}
-            resizeMode="contain"
-          />
-          <Pressable style={[styles.searchButton, { backgroundColor: colors.card }]}>
-            <Search size={20} color={colors.icon} strokeWidth={2} />
-          </Pressable>
+          <Text style={[styles.dateText, { color: colors.secondary }]}>{currentDate}</Text>
+          <View style={{ flexDirection: 'row', gap: 16 }}>
+            <Pressable onPress={toggleTheme}>
+               {colorScheme === 'dark' ? <Sun size={24} color={colors.primary} /> : <Moon size={24} color={colors.primary} />}
+            </Pressable>
+            <Pressable onPress={() => setIsSearching(!isSearching)}>
+               <Search size={24} color={colors.primary} strokeWidth={2} />
+            </Pressable>
+          </View>
         </View>
 
-        <View style={styles.headerInfo}>
-          <View style={styles.titleRow}>
-            <Text style={[styles.title, { color: colors.text }]}>News</Text>
-            <View style={[styles.liveDot, { backgroundColor: colors.error }]} />
-          </View>
-          <Text style={[styles.subtitle, { color: colors.icon }]}>
-            {new Date().toLocaleDateString('en-US', { 
-              weekday: 'long', 
-              month: 'long', 
-              day: 'numeric' 
-            })}
-          </Text>
-        </View>
+        {isSearching ? (
+          <TextInput
+            style={[styles.searchInput, { color: colors.text, backgroundColor: colors.surface, borderColor: colors.border }]}
+            placeholder="Search news..."
+            placeholderTextColor={colors.secondary}
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            autoFocus
+          />
+        ) : (
+          <Text style={[styles.mainTitle, { color: colors.primary }]}>Breaking News</Text>
+        )}
 
         <ScrollView 
           horizontal 
@@ -151,22 +169,23 @@ export default function HomeScreen() {
           style={styles.categoryContainer}
           contentContainerStyle={styles.categoryContent}
         >
-          {(['all', 'markets', 'crypto', 'tech'] as const).map((cat) => (
+          {CATEGORIES.map((cat) => (
             <Pressable
-              key={cat}
-              onPress={() => setCategory(cat)}
+              key={cat.id}
+              onPress={() => {
+                setCategory(cat.id);
+                setSearchQuery('');
+              }}
               style={[
                 styles.categoryButton,
-                {
-                  backgroundColor: category === cat ? colors.accent : colors.card,
-                }
+                category === cat.id && { borderBottomWidth: 2, borderBottomColor: colors.primary }
               ]}
             >
               <Text style={[
                 styles.categoryText,
-                { color: category === cat ? '#FFFFFF' : colors.text }
+                { color: category === cat.id ? colors.primary : colors.secondary, fontWeight: category === cat.id ? '700' : '500' }
               ]}>
-                {cat.charAt(0).toUpperCase() + cat.slice(1)}
+                {cat.label}
               </Text>
             </Pressable>
           ))}
@@ -174,9 +193,9 @@ export default function HomeScreen() {
       </View>
 
       <FlashList
-        data={latest}
+        data={readLater}
         keyExtractor={(item) => item.id}
-        estimatedItemSize={160}
+        estimatedItemSize={120}
         refreshControl={
           <RefreshControl 
             refreshing={newsQuery.isRefetching} 
@@ -189,10 +208,6 @@ export default function HomeScreen() {
           <>
             {featured.length > 0 && (
               <View style={styles.featuredSection}>
-                <View style={styles.sectionHeader}>
-                  <Text style={[styles.sectionTitle, { color: colors.text }]}>Top Story</Text>
-                  <Clock size={14} color={colors.icon} strokeWidth={2} />
-                </View>
                 <NewsCard
                   featured
                   article={featured[0]}
@@ -203,12 +218,28 @@ export default function HomeScreen() {
               </View>
             )}
             
-            {latest.length > 0 && (
+            {topStories.length > 0 && (
+              <View style={styles.topStoriesSection}>
+                <View style={styles.sectionHeader}>
+                  <Text style={[styles.sectionTitle, { color: colors.primary }]}>Top Stories</Text>
+                  <ChevronRight size={20} color={colors.primary} />
+                </View>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.horizontalScrollContent}>
+                  {topStories.map(item => (
+                    <NewsCard
+                      key={item.id}
+                      compact
+                      article={item}
+                      onPress={() => openArticle(item)}
+                    />
+                  ))}
+                </ScrollView>
+              </View>
+            )}
+
+             {readLater.length > 0 && (
               <View style={styles.sectionHeader}>
-                <Text style={[styles.sectionTitle, { color: colors.text }]}>Latest Updates</Text>
-                <Text style={[styles.sectionCount, { color: colors.icon }]}>
-                  {latest.length} articles
-                </Text>
+                <Text style={[styles.sectionTitle, { color: colors.primary }]}>Read Later</Text>
               </View>
             )}
           </>
@@ -216,7 +247,7 @@ export default function HomeScreen() {
         ListEmptyComponent={
           <View style={styles.emptyState}>
             <Text style={[styles.emptyTitle, { color: colors.text }]}>No articles found</Text>
-            <Text style={[styles.emptyBody, { color: colors.icon }]}>
+            <Text style={[styles.emptyBody, { color: colors.secondary }]}>
               Try a different category or pull to refresh
             </Text>
           </View>
@@ -237,11 +268,9 @@ export default function HomeScreen() {
 
 const styles = StyleSheet.create({
   header: {
-    paddingHorizontal: 16,
-    paddingTop: 60,
-    paddingBottom: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(0,0,0,0.05)',
+    paddingHorizontal: 20,
+    paddingTop: 64,
+    paddingBottom: 20,
   },
   headerTop: {
     flexDirection: 'row',
@@ -249,47 +278,49 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 12,
   },
-  logo: {
-    width: 200,
-    height: 52,
-    marginBottom: 8,
+  dateText: {
+    fontSize: 12,
+    fontWeight: '800',
+    textTransform: 'uppercase',
+    letterSpacing: 1,
   },
-  searchButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
+  mainTitle: {
+    fontSize: 32,
+    lineHeight: 38,
+    letterSpacing: -1,
+    fontWeight: '900',
+    marginBottom: 20,
   },
-  headerInfo: {
-    marginBottom: 12,
+  titleText: {
+    fontSize: 32,
+    lineHeight: 38,
+    letterSpacing: -1,
+    fontWeight: '900',
+    marginBottom: 20,
   },
-  titleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  title: {
-    fontSize: 28,
-    lineHeight: 34,
-    letterSpacing: -0.5,
-    fontWeight: '700',
-  },
-  liveDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-  },
-  subtitle: {
-    fontSize: 13,
-    fontWeight: '400',
-    marginTop: 2,
+  searchInput: {
+    height: 48,
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    borderWidth: 1,
+    marginBottom: 20,
+    fontSize: 16,
+    fontWeight: '500',
   },
   categoryContainer: {
-    marginTop: 8,
+    marginBottom: 4,
+  },
+  categoryScroll: {
+    marginBottom: 4,
   },
   categoryContent: {
-    gap: 8,
+    gap: 12,
+    paddingRight: 20,
+  },
+  categoryPill: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
   },
   categoryButton: {
     paddingHorizontal: 16,
@@ -298,65 +329,48 @@ const styles = StyleSheet.create({
   },
   categoryText: {
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: '700',
   },
   content: {
-    paddingHorizontal: 16,
-    paddingTop: 16,
-    paddingBottom: 40,
-  },
-  breakingBanner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 8,
-    marginBottom: 16,
-  },
-  breakingText: {
-    fontSize: 12,
-    fontWeight: '800',
-    color: '#FFFFFF',
-  },
-  breakingMessage: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: '#FFFFFF',
-    flex: 1,
+    paddingHorizontal: 20,
+    paddingTop: 8,
+    paddingBottom: 100,
   },
   featuredSection: {
-    marginBottom: 24,
+    marginBottom: 12,
+  },
+  topStoriesSection: {
+    marginBottom: 32,
+  },
+  horizontalScrollContent: {
+    paddingVertical: 4,
   },
   sectionHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 12,
+    marginBottom: 16,
   },
   sectionTitle: {
-    fontSize: 20,
-    fontWeight: '700',
-    letterSpacing: -0.4,
-  },
-  sectionCount: {
-    fontSize: 13,
-    fontWeight: '500',
+    fontSize: 24,
+    fontWeight: '800',
+    letterSpacing: -0.6,
   },
   emptyState: {
-    paddingVertical: 100,
+    paddingVertical: 120,
     alignItems: 'center',
-    gap: 8,
+    gap: 12,
   },
   emptyTitle: {
-    fontSize: 17,
-    fontWeight: '600',
-    letterSpacing: -0.4,
+    fontSize: 20,
+    fontWeight: '800',
+    letterSpacing: -0.5,
   },
   emptyBody: {
-    fontSize: 15,
+    fontSize: 16,
     textAlign: 'center',
     maxWidth: '80%',
-    lineHeight: 20,
+    lineHeight: 22,
+    fontWeight: '500',
   },
 });
