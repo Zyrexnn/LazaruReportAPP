@@ -299,8 +299,16 @@ const buildSparkline = (prices: number[]) =>
 export const fetchMarketSnapshot = async (): Promise<MarketTicker[]> => {
   console.log('[MarketAPI] Starting market data fetch...');
   
-  const cryptoSymbols = ['BTCUSDT', 'ETHUSDT', 'SOLUSDT', 'BNBUSDT', 'XRPUSDT', 'ADAUSDT'];
-  const stockSymbols = ['AAPL', 'MSFT', 'NVDA', 'GOOGL', 'AMZN', 'TSLA'];
+  const cryptoSymbols = [
+    'BTCUSDT', 'ETHUSDT', 'SOLUSDT', 'BNBUSDT', 'XRPUSDT', 'ADAUSDT', 'DOGEUSDT', 'TRXUSDT', 'DOTUSDT', 'LTCUSDT',
+    'MATICUSDT', 'SHIBUSDT', 'AVAXUSDT', 'LINKUSDT', 'XLMUSDT', 'UNIUSDT', 'NEARUSDT', 'ATOMUSDT', 'XMRUSDT', 'ICPUSDT',
+    'APTUSDT', 'ARBUSDT', 'OPUSDT', 'LDOUSDT', 'GRTUSDT', 'RNDRUSDT', 'STXUSDT', 'INJUSDT', 'TIAUSDT', 'SEIUSDT',
+    'FETUSDT', 'AGIXUSDT', 'OCEANUSDT', 'GALAUSDT', 'SANDUSDT', 'MANAUSDT', 'AXSUSDT', 'AAVEUSDT', 'MKRUSDT', 'SNXUSDT'
+  ];
+  const stockSymbols = [
+    'AAPL', 'MSFT', 'NVDA', 'GOOGL', 'AMZN', 'TSLA', 'META', 'UNH', 'LLY', 'JPM', 
+    'V', 'JNJ', 'AVGO', 'PG', 'MA', 'HD', 'COST', 'CVX', 'MRK', 'ABBV'
+  ];
 
   try {
     // Fetch crypto data from Binance (always available, no API key needed)
@@ -410,7 +418,29 @@ export const fetchMarketSnapshot = async (): Promise<MarketTicker[]> => {
         console.warn('[MarketAPI] Failed to fetch stock data:', error);
       }
     } else {
-      console.log('[MarketAPI] Finnhub API key not configured, skipping stocks');
+      console.log('[MarketAPI] Finnhub API key not configured, providing fallback stock data');
+      stockTickers = stockSymbols.map(symbol => {
+        const mockPrice = 100 + Math.random() * 500;
+        const mockChange = (Math.random() - 0.5) * 5;
+        const previousClose = mockPrice / (1 + mockChange / 100);
+        
+        const baseSeries = Array.from({ length: 24 }, (_, i) => ({
+          timestamp: Date.now() - (23 - i) * 15 * 60 * 1000,
+          value: Number((previousClose * (1 + (mockChange / 100) * (i / 23) + (Math.random() - 0.5) * 0.01)).toFixed(2)),
+        }));
+
+        return {
+          id: symbol,
+          symbol,
+          name: symbol,
+          price: mockPrice,
+          changePercent24h: mockChange,
+          sparkline: baseSeries,
+          type: 'stock' as const,
+          high24h: mockPrice * 1.02,
+          low24h: mockPrice * 0.98,
+        };
+      });
     }
 
     const allTickers = [...cryptoTickers, ...stockTickers];
@@ -419,7 +449,6 @@ export const fetchMarketSnapshot = async (): Promise<MarketTicker[]> => {
     return allTickers;
   } catch (error) {
     console.error('[MarketAPI] Fatal error fetching market data:', error);
-    // Return empty array on fatal error
     return [];
   }
 };
