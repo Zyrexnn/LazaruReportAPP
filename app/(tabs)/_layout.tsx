@@ -1,8 +1,8 @@
 import { BlurView } from 'expo-blur';
 import { Tabs } from 'expo-router';
-import { Bookmark, ChartNoAxesCombined, Newspaper } from 'lucide-react-native';
+import { Bookmark, ChartNoAxesCombined, Newspaper, Search } from 'lucide-react-native';
 import React from 'react';
-import { StyleSheet } from 'react-native';
+import { StyleSheet, View, Platform } from 'react-native';
 
 import { HapticTab } from '@/components/haptic-tab';
 import { Colors } from '@/constants/theme';
@@ -17,32 +17,57 @@ export default function TabLayout() {
       screenOptions={{
         headerShown: false,
         tabBarButton: HapticTab,
-        tabBarActiveTintColor: colors.accent,
-        tabBarInactiveTintColor: colors.icon,
-        tabBarStyle: styles.tabBar,
+        tabBarActiveTintColor: colors.tabIconSelected,
+        tabBarInactiveTintColor: colors.tabIconDefault,
+        tabBarStyle: [
+          styles.tabBar,
+          {
+            backgroundColor: colors.background,
+            borderColor: colors.border,
+          }
+        ],
+        tabBarShowLabel: true,
+        tabBarLabelStyle: {
+          fontSize: 10,
+          fontWeight: '600',
+          marginTop: 4,
+        },
         tabBarBackground: () => (
-          <BlurView intensity={90} tint={colorScheme === 'dark' ? 'dark' : 'light'} style={StyleSheet.absoluteFill} />
+          <View style={{ flex: 1, backgroundColor: 'transparent' }} />
         ),
       }}>
       <Tabs.Screen
         name="index"
         options={{
           title: 'News',
-          tabBarIcon: ({ color }) => <Newspaper size={20} color={color} strokeWidth={1.5} />,
+          tabBarIcon: ({ color, focused }) => (
+            <View style={[styles.iconContainer, focused && { backgroundColor: colors.accent }]}>
+               <Newspaper size={20} color={focused ? (colorScheme === 'dark' ? '#000' : '#FFF') : color} strokeWidth={focused ? 2 : 1.5} />
+            </View>
+          ),
+          tabBarLabel: ({ color, focused }) => focused ? null : <></>, 
         }}
       />
       <Tabs.Screen
         name="market"
         options={{
           title: 'Market',
-          tabBarIcon: ({ color }) => <ChartNoAxesCombined size={20} color={color} strokeWidth={1.5} />,
+          tabBarIcon: ({ color, focused }) => (
+            <View style={[styles.iconContainer, focused && { backgroundColor: colors.accent }]}>
+              <ChartNoAxesCombined size={20} color={focused ? (colorScheme === 'dark' ? '#000' : '#FFF') : color} strokeWidth={focused ? 2 : 1.5} />
+            </View>
+          ),
         }}
       />
       <Tabs.Screen
         name="bookmarks"
         options={{
           title: 'Saved',
-          tabBarIcon: ({ color }) => <Bookmark size={20} color={color} strokeWidth={1.5} />,
+          tabBarIcon: ({ color, focused }) => (
+             <View style={[styles.iconContainer, focused && { backgroundColor: colors.accent }]}>
+              <Bookmark size={20} color={focused ? (colorScheme === 'dark' ? '#000' : '#FFF') : color} strokeWidth={focused ? 2 : 1.5} />
+            </View>
+          ),
         }}
       />
     </Tabs>
@@ -52,10 +77,25 @@ export default function TabLayout() {
 const styles = StyleSheet.create({
   tabBar: {
     position: 'absolute',
-    height: 84,
-    paddingTop: 8,
-    paddingBottom: 28,
-    borderTopWidth: 0,
-    backgroundColor: 'transparent',
+    bottom: Platform.OS === 'ios' ? 30 : 20,
+    left: 20,
+    right: 20,
+    height: 64,
+    borderRadius: 32,
+    borderWidth: 1,
+    elevation: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 5 },
+    shadowOpacity: 0.1,
+    shadowRadius: 10,
+    paddingHorizontal: 10,
+    paddingBottom: 0, // Override default padding
   },
+  iconContainer: {
+    padding: 10,
+    borderRadius: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 8, // Adjust for centering
+  }
 });

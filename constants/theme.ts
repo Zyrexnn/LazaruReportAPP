@@ -5,42 +5,51 @@
 
 import { Platform } from 'react-native';
 
-const tintColorLight = '#C5A059';
-const tintColorDark = '#C5A059';
+const tintColorLight = '#E60000'; // Red
+const tintColorDark = '#FFD700'; // Gold for Obsidian Dossier feel
 
 export const Colors = {
   light: {
-    text: '#1A1A1A',
-    background: '#FFFFFF',
+    text: '#000000',
+    background: '#F9F9FB', // Soft white/grey background
+    surface: '#FFFFFF',
     tint: tintColorLight,
     icon: '#8E8E93',
-    tabIconDefault: '#C7C7CC',
+    tabIconDefault: '#999999',
     tabIconSelected: tintColorLight,
-    card: '#F5F5F7',
-    border: '#E5E5EA',
-    gold: '#C5A059',
-    accent: '#007AFF',
-    success: '#34C759',
+    tabBackground: '#FFFFFF',
+    card: '#FFFFFF',
+    border: '#EAEAEC',
+    accent: '#E60000',
+    primary: '#000000',
+    secondary: '#8E8E93',
+    success: '#00C853',
     error: '#FF3B30',
     muted: '#F2F2F7',
+    chartLine: '#000000',
+    chartBackground: '#F9F9FB',
   },
   dark: {
     text: '#FFFFFF',
-    background: '#000000',
+    background: '#000000', // Pure Black
+    surface: '#1A1A1A', // Dark Grey Card
     tint: tintColorDark,
-    icon: '#8E8E93',
-    tabIconDefault: '#48484A',
-    tabIconSelected: tintColorDark,
-    card: '#1C1C1E',  
-    border: '#38383A',
-    gold: '#C5A059',
-    accent: '#0A84FF',
-    success: '#30D158',
-    error: '#FF453A',
-    muted: '#1C1C1E',
+    icon: '#A1A1AA',
+    tabIconDefault: '#6B7280',
+    tabIconSelected: '#FFFFFF', 
+    tabBackground: '#000000',
+    card: '#111111',
+    border: '#222222',
+    accent: '#FFD700', 
+    primary: '#FFFFFF',
+    secondary: '#A1A1AA',
+    success: '#22C55E', 
+    error: '#EF4444', 
+    muted: '#222222',
+    chartLine: '#FFFFFF',
+    chartBackground: '#000000',
   },
 };
-
 export const Fonts = Platform.select({
   ios: {
     /** iOS `UIFontDescriptorSystemDesignDefault` */
