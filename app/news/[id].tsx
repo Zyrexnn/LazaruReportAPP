@@ -1,130 +1,179 @@
-import React from 'react';
-import { StyleSheet, ScrollView, Image, View, TouchableOpacity } from 'react-native';
-import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { MOCK_NEWS } from '@/constants/MockData';
-import { useColorScheme } from '@/hooks/use-color-scheme';
 import { Colors } from '@/constants/theme';
-import { Ionicons } from '@expo/vector-icons';
+import { useColorScheme } from '@/hooks/use-color-scheme';
+import { useNewsStore } from '@/src/store/useNewsStore';
+import { Image } from 'expo-image';
+import { Stack, useRouter } from 'expo-router';
+import { StatusBar } from 'expo-status-bar';
+import { ChevronLeft, Eye, EyeOff } from 'lucide-react-native';
+import { useMemo, useState } from 'react';
+import { Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import RenderHtml from 'react-native-render-html';
 
 export default function NewsDetailScreen() {
-  const { id } = useLocalSearchParams();
   const router = useRouter();
+  const { width } = useWindowDimensions();
+  const { selectedArticle } = useNewsStore();
+  const [distractionFree, setDistractionFree] = useState(false);
   const colorScheme = useColorScheme() ?? 'light';
   const colors = Colors[colorScheme];
 
-  const item = MOCK_NEWS.find((n) => n.id === id);
+  const articleHtml = useMemo(() => {
+    if (!selectedArticle) {
+      return '<p>Article unavailable.</p>';
+    }
 
-  if (!item) {
+    if (selectedArticle.content?.trim().startsWith('<')) {
+      return selectedArticle.content;
+    }
+
+    return `<p>${selectedArticle.summary}</p><p>${selectedArticle.content ?? selectedArticle.summary}</p>`;
+  }, [selectedArticle]);
+
+  if (!selectedArticle) {
     return (
-      <ThemedView style={styles.container}>
-        <ThemedText>Article not found</ThemedText>
-      </ThemedView>
+      <View style={styles.emptyState}>
+        <Text style={styles.emptyTitle}>Article unavailable.</Text>
+      </View>
     );
   }
 
   return (
-    <ThemedView style={styles.container}>
-      <Stack.Screen 
-        options={{ 
-          title: 'Article',
-          headerTransparent: true,
-          headerLeft: () => (
-            <TouchableOpacity 
-              onPress={() => router.back()} 
-              style={[styles.backButton, { backgroundColor: colors.background + 'CC' }]}
-            >
-              <Ionicons name="arrow-back" size={24} color={colors.text} />
-            </TouchableOpacity>
-          ),
-          headerTitle: '',
-        }} 
-      />
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        <Image source={{ uri: item.imageUrl }} style={styles.image} />
-        <View style={styles.content}>
-          <ThemedText style={[styles.category, { color: colors.gold }]}>
-            {item.category.toUpperCase()}
-          </ThemedText>
-          <ThemedText type="title" style={styles.title}>
-            {item.title}
-          </ThemedText>
-          <View style={styles.meta}>
-            <ThemedText style={styles.author}>By {item.author}</ThemedText>
-            <ThemedText style={styles.date}>{item.date}</ThemedText>
-          </View>
-          <View style={[styles.divider, { backgroundColor: colors.border }]} />
-          <ThemedText style={styles.fullText}>
-            {item.excerpt}
-            {"\n\n"}
-            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. 
-            {"\n\n"}
-            Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
-            {"\n\n"}
-            Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo.
-          </ThemedText>
+    <View style={[styles.screen, { backgroundColor: colors.background }]}>
+      <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
+      <Stack.Screen options={{ headerShown: false }} />
+      <ScrollView contentContainerStyle={styles.content}>
+        <Image
+          source={
+            selectedArticle.imageUrl ||
+            'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?q=80&w=1400&auto=format&fit=crop'
+          }
+          contentFit="cover"
+          cachePolicy="memory-disk"
+          style={styles.heroImage}
+        />
+        <View style={styles.overlayControls}>
+          <Pressable style={[styles.iconButton, { backgroundColor: colorScheme === 'dark' ? 'rgba(28, 28, 30, 0.9)' : 'rgba(255,255,255,0.9)' }]} onPress={() => router.back()}>
+            <ChevronLeft size={20} color={colors.text} strokeWidth={1.5} />
+          </Pressable>
+          <Pressable style={[styles.iconButton, { backgroundColor: colorScheme === 'dark' ? 'rgba(28, 28, 30, 0.9)' : 'rgba(255,255,255,0.9)' }]} onPress={() => setDistractionFree((value) => !value)}>
+            {distractionFree ? <Eye size={18} color={colors.text} strokeWidth={1.5} /> : <EyeOff size={18} color={colors.text} strokeWidth={1.5} />}
+          </Pressable>
+        </View>
+
+        <View style={[styles.articleSheet, { backgroundColor: colors.background }]}>
+          {!distractionFree ? (
+            <>
+              <Text style={[styles.source, { color: colors.icon }]}>{selectedArticle.source}</Text>
+              <Text style={[styles.title, { color: colors.text }]}>{selectedArticle.title}</Text>
+              <Text style={[styles.meta, { color: colors.icon }]}>
+                {new Date(selectedArticle.publishedAt).toLocaleString('en-US', {
+                  month: 'short',
+                  day: 'numeric',
+                  hour: 'numeric',
+                  minute: '2-digit',
+                })}
+              </Text>
+            </>
+          ) : null}
+          <RenderHtml
+            contentWidth={width - 40}
+            source={{ html: articleHtml }}
+            baseStyle={distractionFree ? [styles.distractionBody, { color: colors.text }] : [styles.body, { color: colors.text }]}
+            tagsStyles={{
+              p: distractionFree ? styles.distractionParagraph : styles.paragraph,
+              a: [styles.link, { color: colors.accent }],
+              h1: [styles.heading, { color: colors.text }],
+              h2: [styles.heading, { color: colors.text }],
+            }}
+          />
         </View>
       </ScrollView>
-    </ThemedView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  screen: {
     flex: 1,
   },
-  scrollContent: {
-    paddingBottom: 40,
+  content: {
+    paddingBottom: 64,
   },
-  image: {
+  heroImage: {
     width: '100%',
     height: 300,
   },
-  content: {
-    padding: 20,
-    marginTop: -20,
+  overlayControls: {
+    position: 'absolute',
+    top: 60,
+    left: 16,
+    right: 16,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  iconButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  articleSheet: {
+    marginTop: -24,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
-    backgroundColor: undefined, // Uses ThemedView's background
+    paddingHorizontal: 20,
+    paddingTop: 24,
   },
-  backButton: {
-    padding: 8,
-    borderRadius: 20,
-    marginLeft: 10,
-  },
-  category: {
-    fontSize: 14,
-    fontWeight: '700',
-    letterSpacing: 1.5,
+  source: {
+    fontSize: 13,
+    fontWeight: '400',
     marginBottom: 8,
   },
   title: {
-    fontSize: 26,
+    fontSize: 28,
     lineHeight: 34,
-    marginBottom: 16,
+    fontWeight: '700',
+    letterSpacing: -0.5,
+    marginBottom: 12,
   },
   meta: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    fontSize: 13,
+    fontWeight: '400',
     marginBottom: 20,
   },
-  author: {
-    fontSize: 14,
-    opacity: 0.7,
-    fontWeight: '500',
+  body: {
+    fontSize: 17,
+    lineHeight: 26,
   },
-  date: {
-    fontSize: 14,
-    opacity: 0.5,
+  distractionBody: {
+    fontSize: 19,
+    lineHeight: 30,
   },
-  divider: {
-    height: 1,
+  paragraph: {
+    marginBottom: 16,
+  },
+  distractionParagraph: {
     marginBottom: 20,
   },
-  fullText: {
-    fontSize: 18,
+  heading: {
+    fontSize: 22,
     lineHeight: 28,
-    opacity: 0.9,
+    fontWeight: '700',
+    marginTop: 20,
+    marginBottom: 12,
+  },
+  link: {
+    fontWeight: '600',
+    textDecorationLine: 'underline',
+  },
+  emptyState: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  emptyTitle: {
+    fontSize: 17,
+    fontWeight: '600',
   },
 });
