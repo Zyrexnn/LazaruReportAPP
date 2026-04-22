@@ -1,25 +1,24 @@
-import { Colors } from '@/constants/theme';
-import { useColorScheme } from '@/hooks/use-color-scheme';
+import { BentoConfig, BorderWidth, Radius, Shadows, Spacing, Typography } from '@/constants/theme';
+import { useThemeColors, useIsDark } from '@/hooks/use-color-scheme';
 import { useQuery } from '@tanstack/react-query';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { ChevronLeft, TrendingDown, TrendingUp, Search, X, ChevronRight } from 'lucide-react-native';
+import { ChevronLeft, TrendingDown, TrendingUp, Search, X } from 'lucide-react-native';
 import { useRef, useState, useMemo } from 'react';
-import { Dimensions, Platform, Pressable, ScrollView, StyleSheet, Text, View, Modal, TextInput, FlatList, BlurView } from 'react-native';
+import { Dimensions, Platform, Pressable, ScrollView, StyleSheet, Text, View, Modal, TextInput, FlatList } from 'react-native';
 import { WebView } from 'react-native-webview';
 import { fetchMarketSnapshot } from '@/src/services/newsApi';
 
-const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 type TimeFrame = '1D' | '1W' | '1M' | '3M' | '1Y' | 'ALL';
 type ChartType = 'line' | 'candle' | 'area';
 
 function StatCard({ label, value, color }: { label: string; value: string; color?: string }) {
-  const colorScheme = useColorScheme() ?? 'light';
-  const colors = Colors[colorScheme];
+  const colors = useThemeColors();
   return (
-    <View style={[styles.statCard, { backgroundColor: colors.card }]}>
-      <Text style={[styles.statLabel, { color: colors.icon }]}>{label}</Text>
+    <View style={[styles.statCard, { backgroundColor: colors.cardBg, borderColor: colors.cardBorder }]}>
+      <Text style={[styles.statLabel, { color: colors.textSecondary }]}>{label}</Text>
       <Text style={[styles.statValue, { color: color || colors.text }]}>{value}</Text>
     </View>
   );
@@ -28,15 +27,15 @@ function StatCard({ label, value, color }: { label: string; value: string; color
 export default function MarketDetailScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
-  const colorScheme = useColorScheme() ?? 'light';
-  const colors = Colors[colorScheme];
-  
+  const colors = useThemeColors();
+  const isDark = useIsDark();
+
   const [timeFrame, setTimeFrame] = useState<TimeFrame>('1D');
   const [chartType, setChartType] = useState<ChartType>('candle');
   const [showIndicators, setShowIndicators] = useState(true);
   const [isSwitcherOpen, setIsSwitcherOpen] = useState(false);
   const [switcherSearch, setSwitcherSearch] = useState('');
-  
+
   const webViewRef = useRef<WebView>(null);
 
   const symbol = params.symbol as string;
@@ -50,7 +49,7 @@ export default function MarketDetailScreen() {
         const response = await fetch(`https://api.binance.com/api/v3/ticker/24hr?symbol=${symbol}USDT`);
         const data = await response.json();
         return {
-          symbol: symbol,
+          symbol,
           name: symbol,
           price: Number(data.lastPrice),
           change24h: Number(data.priceChange),
@@ -61,7 +60,7 @@ export default function MarketDetailScreen() {
           type: 'crypto' as const,
         };
       }
-      
+
       if (hasConfiguredKey(env.finnhubApiKey)) {
         const response = await fetch(`https://finnhub.io/api/v1/quote?symbol=${symbol}&token=${env.finnhubApiKey}`);
         const data = await response.json();
@@ -95,9 +94,10 @@ export default function MarketDetailScreen() {
   const filteredAssets = useMemo(() => {
     const assets = allAssetsQuery.data ?? [];
     if (!switcherSearch.trim()) return assets;
-    return assets.filter(a => 
-      a.symbol.toLowerCase().includes(switcherSearch.toLowerCase()) || 
-      a.name.toLowerCase().includes(switcherSearch.toLowerCase())
+    return assets.filter(
+      (a) =>
+        a.symbol.toLowerCase().includes(switcherSearch.toLowerCase()) ||
+        a.name.toLowerCase().includes(switcherSearch.toLowerCase())
     );
   }, [allAssetsQuery.data, switcherSearch]);
 
@@ -121,6 +121,7 @@ export default function MarketDetailScreen() {
     }
   };
 
+  const chartBg = isDark ? colors.background : '#FFFFFF';
   const tradingViewHTML = `
     <!DOCTYPE html>
     <html>
@@ -129,7 +130,7 @@ export default function MarketDetailScreen() {
         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
         <style>
           * { margin: 0; padding: 0; box-sizing: border-box; }
-          body { background: ${colorScheme === 'dark' ? '#000000' : '#FFFFFF'}; overflow: hidden; }
+          body { background: ${chartBg}; overflow: hidden; }
           #tradingview_chart { width: 100vw; height: 100vh; }
         </style>
       </head>
@@ -142,10 +143,10 @@ export default function MarketDetailScreen() {
             "symbol": "${getTradingViewSymbol()}",
             "interval": "${getIntervalFromTimeFrame(timeFrame)}",
             "timezone": "Etc/UTC",
-            "theme": "${colorScheme === 'dark' ? 'dark' : 'light'}",
+            "theme": "${isDark ? 'dark' : 'light'}",
             "style": "${chartType === 'candle' ? '1' : chartType === 'area' ? '3' : '2'}",
             "locale": "en",
-            "toolbar_bg": "${colorScheme === 'dark' ? '#000000' : '#FFFFFF'}",
+            "toolbar_bg": "${chartBg}",
             "enable_publishing": false,
             "hide_top_toolbar": false,
             "hide_legend": false,
@@ -165,7 +166,7 @@ export default function MarketDetailScreen() {
   if (!detail) {
     return (
       <View style={[styles.container, { backgroundColor: colors.background }]}>
-        <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
+        <StatusBar style={isDark ? 'light' : 'dark'} />
         <Text style={[styles.loadingText, { color: colors.text }]}>Loading...</Text>
       </View>
     );
@@ -173,44 +174,39 @@ export default function MarketDetailScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
+      <StatusBar style={isDark ? 'light' : 'dark'} />
       <Stack.Screen options={{ headerShown: false }} />
 
-      {/* Asset Switcher Modal - REDESIGNED */}
-      <Modal 
-        visible={isSwitcherOpen} 
-        animationType="slide" 
-        transparent={true}
-        statusBarTranslucent
-      >
+      {/* ── Asset Switcher Modal ───────────────────────────── */}
+      <Modal visible={isSwitcherOpen} animationType="slide" transparent statusBarTranslucent>
         <View style={styles.modalOverlay}>
           <Pressable style={styles.modalDismissArea} onPress={() => setIsSwitcherOpen(false)} />
           <View style={[styles.modalContent, { backgroundColor: colors.background, borderTopColor: colors.border }]}>
-            <View style={styles.modalHandle} />
-            
+            <View style={[styles.modalHandle, { backgroundColor: colors.border }]} />
+
             <View style={styles.modalHeader}>
               <View>
                 <Text style={[styles.modalTitle, { color: colors.text }]}>Switch Asset</Text>
-                <Text style={[styles.modalSubtitle, { color: colors.secondary }]}>Select from 50+ global assets</Text>
+                <Text style={[styles.modalSubtitle, { color: colors.textSecondary }]}>Select from 50+ global assets</Text>
               </View>
-              <Pressable onPress={() => setIsSwitcherOpen(false)} style={[styles.closeCircle, { backgroundColor: colors.surface }]}>
-                <X size={20} color={colors.text} />
+              <Pressable onPress={() => setIsSwitcherOpen(false)} style={[styles.closeCircle, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+                <X size={18} color={colors.text} />
               </Pressable>
             </View>
-            
+
             <View style={[styles.modalSearchBox, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-              <Search size={18} color={colors.secondary} />
+              <Search size={16} color={colors.textSecondary} />
               <TextInput
                 style={[styles.modalSearchInput, { color: colors.text }]}
                 placeholder="Find crypto or stocks..."
-                placeholderTextColor={colors.secondary}
+                placeholderTextColor={colors.textSecondary}
                 value={switcherSearch}
                 onChangeText={setSwitcherSearch}
                 autoFocus
               />
               {switcherSearch.length > 0 && (
                 <Pressable onPress={() => setSwitcherSearch('')}>
-                  <X size={16} color={colors.secondary} />
+                  <X size={14} color={colors.textSecondary} />
                 </Pressable>
               )}
             </View>
@@ -223,12 +219,12 @@ export default function MarketDetailScreen() {
               renderItem={({ item }) => {
                 const itemPositive = item.changePercent24h >= 0;
                 return (
-                  <Pressable 
+                  <Pressable
                     style={({ pressed }) => [
-                      styles.assetItem, 
+                      styles.assetItem,
                       { borderBottomColor: colors.border },
-                      pressed && { backgroundColor: colors.surface }
-                    ]} 
+                      pressed && { backgroundColor: colors.accentSoft },
+                    ]}
                     onPress={() => {
                       setIsSwitcherOpen(false);
                       setSwitcherSearch('');
@@ -236,12 +232,12 @@ export default function MarketDetailScreen() {
                     }}
                   >
                     <View style={styles.assetLeft}>
-                      <View style={[styles.assetIcon, { backgroundColor: colors.surface }]}>
+                      <View style={[styles.assetIcon, { backgroundColor: colors.surface, borderColor: colors.border }]}>
                         <Text style={[styles.assetIconText, { color: colors.text }]}>{item.symbol.charAt(0)}</Text>
                       </View>
                       <View>
                         <Text style={[styles.assetSymbolText, { color: colors.text }]}>{item.symbol}</Text>
-                        <Text style={[styles.assetNameText, { color: colors.secondary }]} numberOfLines={1}>{item.name}</Text>
+                        <Text style={[styles.assetNameText, { color: colors.textSecondary }]} numberOfLines={1}>{item.name}</Text>
                       </View>
                     </View>
                     <View style={styles.assetRight}>
@@ -260,67 +256,76 @@ export default function MarketDetailScreen() {
         </View>
       </Modal>
 
-      {/* Header */}
-      <View style={[styles.header, { backgroundColor: colors.background, borderBottomColor: colors.border }]}>
-        <Pressable onPress={() => router.back()} style={styles.backButton}>
-          <ChevronLeft size={24} color={colors.text} strokeWidth={2} />
+      {/* ── Header ─────────────────────────────────────────── */}
+      <View style={[styles.header, { borderBottomColor: colors.border }]}>
+        <Pressable onPress={() => router.back()} style={[styles.backButton, { borderColor: colors.border }]}>
+          <ChevronLeft size={22} color={colors.text} strokeWidth={2} />
         </Pressable>
-        
+
         <View style={styles.headerCenter}>
           <Text style={[styles.headerSymbol, { color: colors.text }]}>{detail.symbol}</Text>
-          <Text style={[styles.headerType, { color: colors.icon }]}>
+          <Text style={[styles.headerType, { color: colors.textSecondary }]}>
             {detail.type === 'crypto' ? 'Cryptocurrency' : 'Stock'}
           </Text>
         </View>
 
-        <Pressable onPress={() => setIsSwitcherOpen(true)} style={styles.moreButton}>
-          <Search size={22} color={colors.text} />
+        <Pressable onPress={() => setIsSwitcherOpen(true)} style={[styles.moreButton, { borderColor: colors.border }]}>
+          <Search size={20} color={colors.text} />
         </Pressable>
       </View>
 
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+        {/* ── Price Section ─────────────────────────────────── */}
         <View style={styles.priceSection}>
           <Text style={[styles.currentPrice, { color: colors.text }]}>
             ${detail.price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: detail.price > 100 ? 2 : 6 })}
           </Text>
-          <View style={styles.changeRow}>
-            {positive ? <TrendingUp size={20} color={colors.success} strokeWidth={2} /> : <TrendingDown size={20} color={colors.error} strokeWidth={2} />}
+          <View style={[styles.changePill, { backgroundColor: positive ? 'rgba(16,185,129,0.12)' : 'rgba(239,68,68,0.12)' }]}>
+            {positive ? <TrendingUp size={16} color={colors.success} strokeWidth={2.5} /> : <TrendingDown size={16} color={colors.error} strokeWidth={2.5} />}
             <Text style={[styles.changeText, { color: positive ? colors.success : colors.error }]}>
               {positive ? '+' : ''}{detail.change24h.toFixed(2)} ({positive ? '+' : ''}{detail.changePercent24h.toFixed(2)}%)
             </Text>
           </View>
         </View>
 
+        {/* ── Chart Controls ───────────────────────────────── */}
         <View style={styles.controlsRow}>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.controlsScroll}>
-            {(['line', 'candle', 'area'] as ChartType[]).map((type) => (
+            {(['line', 'candle', 'area'] as ChartType[]).map((t) => (
               <Pressable
-                key={type}
-                onPress={() => setChartType(type)}
-                style={[styles.controlButton, { backgroundColor: chartType === type ? colors.accent : colors.surface }]}
+                key={t}
+                onPress={() => setChartType(t)}
+                style={[styles.controlButton, {
+                  backgroundColor: chartType === t ? colors.accent : colors.surface,
+                  borderColor: chartType === t ? colors.accent : colors.border,
+                }]}
               >
-                <Text style={[styles.controlText, { color: chartType === type ? (colorScheme === 'dark' ? '#000' : '#FFF') : colors.secondary }]}>
-                  {type.charAt(0).toUpperCase() + type.slice(1)}
+                <Text style={[styles.controlText, { color: chartType === t ? colors.badgeText : colors.textSecondary }]}>
+                  {t.charAt(0).toUpperCase() + t.slice(1)}
                 </Text>
               </Pressable>
             ))}
             <View style={[styles.divider, { backgroundColor: colors.border }]} />
             <Pressable
               onPress={() => setShowIndicators(!showIndicators)}
-              style={[styles.controlButton, { backgroundColor: showIndicators ? colors.accent : colors.surface }]}
+              style={[styles.controlButton, {
+                backgroundColor: showIndicators ? colors.accent : colors.surface,
+                borderColor: showIndicators ? colors.accent : colors.border,
+              }]}
             >
-              <Text style={[styles.controlText, { color: showIndicators ? (colorScheme === 'dark' ? '#000' : '#FFF') : colors.secondary }]}>
-                Indicators: {showIndicators ? 'ON' : 'OFF'}
+              <Text style={[styles.controlText, { color: showIndicators ? colors.badgeText : colors.textSecondary }]}>
+                Indicators
               </Text>
             </Pressable>
           </ScrollView>
         </View>
 
-        <View style={[styles.chartContainer, { backgroundColor: colors.card }]}>
+        {/* ── Chart ────────────────────────────────────────── */}
+        <View style={[styles.chartContainer, { backgroundColor: colors.cardBg, borderColor: colors.cardBorder }]}>
           {Platform.OS === 'web' ? (
             <iframe
               src={`data:text/html;charset=utf-8,${encodeURIComponent(tradingViewHTML)}`}
-              style={{ width: '100%', height: 500, border: 'none' }}
+              style={{ width: '100%', height: 480, border: 'none' }}
             />
           ) : (
             <WebView
@@ -328,34 +333,39 @@ export default function MarketDetailScreen() {
               source={{ html: tradingViewHTML }}
               style={styles.webView}
               scrollEnabled={false}
-              javaScriptEnabled={true}
-              domStorageEnabled={true}
+              javaScriptEnabled
+              domStorageEnabled
             />
           )}
         </View>
 
+        {/* ── Time Frame ───────────────────────────────────── */}
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.timeFrameContainer} contentContainerStyle={styles.timeFrameContent}>
           {(['1D', '1W', '1M', '3M', '1Y', 'ALL'] as TimeFrame[]).map((tf) => (
             <Pressable
               key={tf}
               onPress={() => setTimeFrame(tf)}
-              style={[styles.timeFrameButton, { backgroundColor: timeFrame === tf ? colors.accent : colors.surface }]}
+              style={[styles.timeFrameButton, {
+                backgroundColor: timeFrame === tf ? colors.accent : colors.surface,
+                borderColor: timeFrame === tf ? colors.accent : colors.border,
+              }]}
             >
-              <Text style={[styles.timeFrameText, { color: timeFrame === tf ? (colorScheme === 'dark' ? '#000' : '#FFF') : colors.secondary }]}>{tf}</Text>
+              <Text style={[styles.timeFrameText, { color: timeFrame === tf ? colors.badgeText : colors.textSecondary }]}>{tf}</Text>
             </Pressable>
           ))}
         </ScrollView>
 
+        {/* ── Stats Bento Grid ─────────────────────────────── */}
         <View style={styles.statsSection}>
           <Text style={[styles.sectionTitle, { color: colors.text }]}>24h Statistics</Text>
           <View style={styles.statsGrid}>
             <StatCard label="High" value={`$${detail.high24h.toLocaleString('en-US', { minimumFractionDigits: 2 })}`} color={colors.success} />
             <StatCard label="Low" value={`$${detail.low24h.toLocaleString('en-US', { minimumFractionDigits: 2 })}`} color={colors.error} />
             <StatCard label="Volume" value={`$${(detail.volume24h / 1000000).toFixed(2)}M`} />
-            <StatCard 
-              label="Change" 
-              value={`${positive ? '+' : ''}${detail.changePercent24h.toFixed(2)}%`} 
-              color={positive ? colors.success : colors.error} 
+            <StatCard
+              label="Change"
+              value={`${positive ? '+' : ''}${detail.changePercent24h.toFixed(2)}%`}
+              color={positive ? colors.success : colors.error}
             />
           </View>
         </View>
@@ -368,91 +378,155 @@ export default function MarketDetailScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingTop: 60, paddingBottom: 16, borderBottomWidth: 1 },
-  backButton: { width: 40, height: 40, alignItems: 'center', justifyContent: 'center' },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: BentoConfig.paddingH,
+    paddingTop: 56,
+    paddingBottom: Spacing.lg,
+    borderBottomWidth: 1,
+  },
+  backButton: {
+    width: 38,
+    height: 38,
+    borderRadius: Radius.md,
+    borderWidth: BorderWidth.normal,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   headerCenter: { flex: 1, alignItems: 'center' },
-  headerSymbol: { fontSize: 18, fontWeight: '800', letterSpacing: -0.4 },
-  headerType: { fontSize: 12, fontWeight: '500', marginTop: 2, textTransform: 'uppercase', letterSpacing: 1 },
-  moreButton: { width: 40, height: 40, alignItems: 'center', justifyContent: 'center' },
+  headerSymbol: { ...Typography.h2, fontSize: 18 },
+  headerType: { ...Typography.overline, marginTop: 2 },
+  moreButton: {
+    width: 38,
+    height: 38,
+    borderRadius: Radius.md,
+    borderWidth: BorderWidth.normal,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   scrollView: { flex: 1 },
-  priceSection: { padding: 24, alignItems: 'center' },
-  currentPrice: { fontSize: 44, fontWeight: '900', letterSpacing: -1.5 },
-  changeRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 8 },
-  changeText: { fontSize: 18, fontWeight: '700' },
-  controlsRow: { paddingHorizontal: 16, marginBottom: 16 },
-  controlsScroll: { gap: 8, alignItems: 'center' },
-  controlButton: { paddingHorizontal: 16, paddingVertical: 10, borderRadius: 14, alignItems: 'center' },
-  controlText: { fontSize: 13, fontWeight: '800', textTransform: 'uppercase' },
-  divider: { width: 1, height: 20, marginHorizontal: 4 },
-  chartContainer: { height: 500, marginHorizontal: 16, borderRadius: 20, overflow: 'hidden' },
+  priceSection: { padding: Spacing['2xl'], alignItems: 'center' },
+  currentPrice: { ...Typography.display, fontSize: 40 },
+  changePill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginTop: Spacing.sm,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.xs,
+    borderRadius: Radius.sm,
+  },
+  changeText: { fontSize: 16, fontWeight: '700' },
+  controlsRow: { paddingHorizontal: BentoConfig.paddingH, marginBottom: Spacing.lg },
+  controlsScroll: { gap: Spacing.sm, alignItems: 'center' },
+  controlButton: {
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.sm,
+    borderRadius: Radius.sm,
+    borderWidth: BorderWidth.normal,
+  },
+  controlText: { fontSize: 12, fontWeight: '800', textTransform: 'uppercase', letterSpacing: 0.5 },
+  divider: { width: 1, height: 20, marginHorizontal: Spacing.xs },
+  chartContainer: {
+    height: 480,
+    marginHorizontal: BentoConfig.paddingH,
+    borderRadius: Radius.xl,
+    borderWidth: BorderWidth.normal,
+    overflow: 'hidden',
+  },
   webView: { flex: 1, backgroundColor: 'transparent' },
-  timeFrameContainer: { marginTop: 16, paddingHorizontal: 16 },
-  timeFrameContent: { gap: 8 },
-  timeFrameButton: { paddingHorizontal: 20, paddingVertical: 12, borderRadius: 14 },
-  timeFrameText: { fontSize: 14, fontWeight: '700' },
-  statsSection: { padding: 24 },
-  sectionTitle: { fontSize: 20, fontWeight: '900', marginBottom: 20, letterSpacing: -0.5 },
-  statsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
-  statCard: { flex: 1, minWidth: '45%', padding: 20, borderRadius: 20 },
-  statLabel: { fontSize: 12, fontWeight: '800', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 1 },
-  statValue: { fontSize: 18, fontWeight: '900', letterSpacing: -0.4 },
-  loadingText: { fontSize: 17, fontWeight: '700', textAlign: 'center', marginTop: 100 },
-  
-  // MODAL STYLES
-  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'flex-end' },
+  timeFrameContainer: { marginTop: Spacing.lg, paddingHorizontal: BentoConfig.paddingH },
+  timeFrameContent: { gap: Spacing.sm },
+  timeFrameButton: {
+    paddingHorizontal: Spacing.xl,
+    paddingVertical: Spacing.md,
+    borderRadius: Radius.sm,
+    borderWidth: BorderWidth.normal,
+  },
+  timeFrameText: { fontSize: 13, fontWeight: '800' },
+  statsSection: { padding: Spacing['2xl'] },
+  sectionTitle: { ...Typography.h2, marginBottom: Spacing.xl },
+  statsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: BentoConfig.gap },
+  statCard: {
+    flex: 1,
+    minWidth: '45%',
+    padding: Spacing.lg,
+    borderRadius: Radius.lg,
+    borderWidth: BorderWidth.normal,
+  },
+  statLabel: { ...Typography.overline, marginBottom: Spacing.sm },
+  statValue: { ...Typography.mono, fontSize: 18 },
+  loadingText: { ...Typography.h3, textAlign: 'center', marginTop: 100 },
+
+  // ── Modal ──────────────────────────────────────────────────
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.6)', justifyContent: 'flex-end' },
   modalDismissArea: { flex: 1 },
-  modalContent: { 
-    height: '85%', 
-    borderTopLeftRadius: 36, 
-    borderTopRightRadius: 36, 
+  modalContent: {
+    height: '85%',
+    borderTopLeftRadius: Radius['2xl'],
+    borderTopRightRadius: Radius['2xl'],
     borderTopWidth: 1,
-    padding: 24,
-    paddingTop: 12,
+    padding: Spacing['2xl'],
+    paddingTop: Spacing.md,
   },
   modalHandle: {
     width: 40,
     height: 4,
-    backgroundColor: 'rgba(255,255,255,0.1)',
     borderRadius: 2,
     alignSelf: 'center',
-    marginBottom: 20,
+    marginBottom: Spacing.xl,
   },
-  modalHeader: { 
-    flexDirection: 'row', 
-    justifyContent: 'space-between', 
-    alignItems: 'center', 
-    marginBottom: 24 
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: Spacing['2xl'],
   },
-  modalTitle: { fontSize: 24, fontWeight: '900', letterSpacing: -0.5 },
-  modalSubtitle: { fontSize: 13, fontWeight: '600', marginTop: 2 },
-  closeCircle: { width: 36, height: 36, borderRadius: 18, justifyContent: 'center', alignItems: 'center' },
-  modalSearchBox: { 
-    flexDirection: 'row', 
-    alignItems: 'center', 
-    paddingHorizontal: 18, 
-    height: 56, 
-    borderRadius: 18, 
-    marginBottom: 24, 
-    gap: 14,
-    borderWidth: 1,
+  modalTitle: { ...Typography.h1, fontSize: 22 },
+  modalSubtitle: { ...Typography.caption, marginTop: 2 },
+  closeCircle: {
+    width: 36,
+    height: 36,
+    borderRadius: Radius.md,
+    borderWidth: BorderWidth.normal,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  modalSearchInput: { flex: 1, fontSize: 16, fontWeight: '700' },
+  modalSearchBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: Spacing.lg,
+    height: 48,
+    borderRadius: Radius.md,
+    marginBottom: Spacing['2xl'],
+    gap: Spacing.md,
+    borderWidth: BorderWidth.normal,
+  },
+  modalSearchInput: { flex: 1, fontSize: 15, fontWeight: '600' },
   assetListContent: { paddingBottom: 40 },
-  assetItem: { 
-    flexDirection: 'row', 
-    justifyContent: 'space-between', 
-    alignItems: 'center', 
-    paddingVertical: 18, 
-    paddingHorizontal: 8,
+  assetItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: Spacing.lg,
+    paddingHorizontal: Spacing.sm,
     borderBottomWidth: 1,
-    borderRadius: 16,
   },
-  assetLeft: { flexDirection: 'row', alignItems: 'center', gap: 14, flex: 1 },
-  assetIcon: { width: 44, height: 44, borderRadius: 14, justifyContent: 'center', alignItems: 'center' },
-  assetIconText: { fontSize: 18, fontWeight: '900' },
-  assetSymbolText: { fontSize: 17, fontWeight: '800' },
-  assetNameText: { fontSize: 12, fontWeight: '500', marginTop: 2 },
+  assetLeft: { flexDirection: 'row', alignItems: 'center', gap: Spacing.md, flex: 1 },
+  assetIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: Radius.sm,
+    borderWidth: BorderWidth.thin,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  assetIconText: { fontSize: 16, fontWeight: '900' },
+  assetSymbolText: { fontSize: 16, fontWeight: '700' },
+  assetNameText: { fontSize: 11, fontWeight: '500', marginTop: 1 },
   assetRight: { alignItems: 'flex-end', gap: 4 },
-  assetPriceText: { fontSize: 17, fontWeight: '800' },
-  assetChangeText: { fontSize: 13, fontWeight: '700' },
+  assetPriceText: { ...Typography.mono, fontSize: 16 },
+  assetChangeText: { fontSize: 12, fontWeight: '800' },
 });
