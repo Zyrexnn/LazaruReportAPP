@@ -1,11 +1,21 @@
 import { create } from 'zustand';
+import type { ThemeName } from '@/constants/theme';
+
+const THEME_ORDER: ThemeName[] = ['snow', 'obsidian', 'ocean', 'forest'];
 
 type ThemeState = {
-  themeMode: 'light' | 'dark';
-  toggleTheme: () => void;
+  themeName: ThemeName;
+  setTheme: (name: ThemeName) => void;
+  cycleTheme: () => void;
 };
 
 export const useThemeStore = create<ThemeState>((set) => ({
-  themeMode: 'dark', // default to dark as per premium vibe, or light
-  toggleTheme: () => set((state) => ({ themeMode: state.themeMode === 'dark' ? 'light' : 'dark' })),
+  themeName: 'snow', // default to white/snow theme
+  setTheme: (name) => set({ themeName: name }),
+  cycleTheme: () =>
+    set((state) => {
+      const idx = THEME_ORDER.indexOf(state.themeName);
+      const next = THEME_ORDER[(idx + 1) % THEME_ORDER.length];
+      return { themeName: next };
+    }),
 }));
