@@ -1,26 +1,26 @@
 import { SkeletonBlock } from '@/components/Skeleton';
 import { Colors } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
-import { Sparkline } from '@/src/components/Sparkline';
 import { fetchMarketSnapshot } from '@/src/services/newsApi';
 import type { MarketTicker } from '@/src/types/news';
-import { FlashList } from '@shopify/flash-list';
+import { useThemeStore } from '@/src/store/useThemeStore';
 import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { TrendingDown, TrendingUp } from 'lucide-react-native';
+import { Search, Sun, Moon } from 'lucide-react-native';
 import { useMemo, useState } from 'react';
-import { Image, Pressable, RefreshControl, StyleSheet, Text, View } from 'react-native';
+import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Sparkline } from '@/src/components/Sparkline';
 
 function MarketSkeleton() {
   const colorScheme = useColorScheme() ?? 'light';
   const colors = Colors[colorScheme];
   return (
-    <View style={{ paddingHorizontal: 20, paddingTop: 60, backgroundColor: colors.background, flex: 1 }}>
-      <SkeletonBlock height={60} radius={8} style={{ marginBottom: 24 }} />
-      <SkeletonBlock height={70} radius={8} style={{ marginBottom: 8 }} />
-      <SkeletonBlock height={70} radius={8} style={{ marginBottom: 8 }} />
-      <SkeletonBlock height={70} radius={8} />
+    <View style={{ paddingHorizontal: 24, paddingTop: 80, backgroundColor: colors.background, flex: 1 }}>
+      <SkeletonBlock height={30} width={120} radius={4} style={{ marginBottom: 40 }} />
+      <SkeletonBlock height={60} radius={12} style={{ marginBottom: 20 }} />
+      <SkeletonBlock height={60} radius={12} style={{ marginBottom: 20 }} />
+      <SkeletonBlock height={60} radius={12} />
     </View>
   );
 }
@@ -29,30 +29,27 @@ function MarketRow({ item, onPress }: { item: MarketTicker; onPress: () => void 
   const colorScheme = useColorScheme() ?? 'light';
   const colors = Colors[colorScheme];
   const positive = item.changePercent24h >= 0;
+  const indicatorColor = positive ? '#00FFA3' : '#FF3B3B';
 
   return (
     <Pressable 
       onPress={onPress}
       style={({ pressed }) => [
         styles.row, 
-        { 
-          backgroundColor: colors.background,
-          borderBottomColor: colors.border,
-        },
-        pressed && { opacity: 0.6 }
+        pressed && { backgroundColor: 'rgba(255,255,255,0.03)' }
       ]}
     >
       <View style={styles.leftSection}>
-        <Text style={[styles.symbol, { color: colors.text }]}>{item.symbol}</Text>
-        <Text style={[styles.type, { color: colors.icon }]}>
-          {item.type === 'crypto' ? 'Crypto' : 'Stock'}
-        </Text>
+        <View style={styles.symbolContainer}>
+          <Text style={[styles.symbol, { color: colors.text }]}>{item.symbol}</Text>
+          <Text style={[styles.name, { color: colors.secondary }]} numberOfLines={1}>{item.name}</Text>
+        </View>
       </View>
-      
-      <View style={styles.chartSection}>
+
+      <View style={styles.middleSection}>
         <Sparkline 
           data={item.sparkline} 
-          color={positive ? colors.success : colors.error} 
+          color={indicatorColor} 
           width={80} 
           height={32} 
         />
@@ -60,12 +57,12 @@ function MarketRow({ item, onPress }: { item: MarketTicker; onPress: () => void 
       
       <View style={styles.rightSection}>
         <Text style={[styles.price, { color: colors.text }]}>
-          ${item.price.toLocaleString('en-US', { 
+          {item.price.toLocaleString('en-US', { 
             minimumFractionDigits: 2,
             maximumFractionDigits: item.price > 100 ? 2 : 4 
           })}
         </Text>
-        <Text style={[styles.change, { color: positive ? colors.success : colors.error }]}>
+        <Text style={[styles.changeText, { color: indicatorColor }]}>
           {positive ? '+' : ''}{item.changePercent24h.toFixed(2)}%
         </Text>
       </View>
@@ -76,7 +73,9 @@ function MarketRow({ item, onPress }: { item: MarketTicker; onPress: () => void 
 export default function MarketScreen() {
   const colorScheme = useColorScheme() ?? 'light';
   const colors = Colors[colorScheme];
-  const [filter, setFilter] = useState<'all' | 'crypto' | 'stock'>('all');
+  const { toggleTheme } = useThemeStore();
+  const [searchQuery, setSearchQuery] = useState('');
+  const [activeTab, setActiveTab] = useState<'crypto' | 'stocks'>('crypto');
   const router = useRouter();
   
   const marketQuery = useQuery({
@@ -85,217 +84,284 @@ export default function MarketScreen() {
     refetchInterval: 30000,
   });
 
-  const filteredData = useMemo(() => {
-    const data = marketQuery.data ?? [];
-    if (filter === 'all') return data;
-    return data.filter(item => item.type === filter);
-  }, [marketQuery.data, filter]);
+  const sentimentQuery = useQuery({
+    queryKey: ['market-sentiment'],
+    queryFn: async () => {
+      const res = await fetch('https://api.alternative.me/fng/');
+      const data = await res.json();
+      return data.data?.[0] ?? { value: '50', value_classification: 'Neutral' };
+    },
+    refetchInterval: 3600000,
+  });
 
-  const stats = useMemo(() => {
-    const data = marketQuery.data ?? [];
-    const gainers = data.filter(t => t.changePercent24h > 0).length;
-    const losers = data.filter(t => t.changePercent24h < 0).length;
-    return { gainers, losers, total: data.length };
-  }, [marketQuery.data]);
+  const filteredData = useMemo(() => {
+    let data = marketQuery.data ?? [];
+    data = data.filter(item => item.type === activeTab);
+    if (searchQuery.trim() !== '') {
+      data = data.filter(item => 
+        item.symbol.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        item.name.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    }
+    return data;
+  }, [marketQuery.data, searchQuery, activeTab]);
 
   if (marketQuery.isLoading) {
     return <MarketSkeleton />;
   }
 
+  const sentiment = sentimentQuery.data;
+
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
       <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
       
-      {/* Header with Logo */}
-      <View style={[styles.header, { backgroundColor: colors.background, borderBottomColor: colors.border }]}>
-        <View style={styles.headerContent}>
-          <Image 
-            source={require('@/assets/logolazarusreport.png')}
-            style={styles.logo}
-            resizeMode="contain"
-          />
-          <View style={styles.headerRight}>
-            <Text style={[styles.marketLabel, { color: colors.icon }]}>Markets</Text>
-            <View style={styles.statsRow}>
-              <View style={styles.statBadge}>
-                <TrendingUp size={12} color={colors.success} strokeWidth={2} />
-                <Text style={[styles.statText, { color: colors.success }]}>{stats.gainers}</Text>
-              </View>
-              <View style={styles.statBadge}>
-                <TrendingDown size={12} color={colors.error} strokeWidth={2} />
-                <Text style={[styles.statText, { color: colors.error }]}>{stats.losers}</Text>
-              </View>
-            </View>
+      <View style={styles.header}>
+        <View style={{ flex: 1 }}>
+          <Text style={[styles.headerTitle, { color: colors.text }]}>Markets</Text>
+          <View style={styles.sentimentMinimal}>
+             <View style={[styles.sentimentDot, { backgroundColor: parseInt(sentiment?.value ?? '50') > 50 ? '#00FFA3' : '#FF3B3B' }]} />
+             <Text style={[styles.sentimentText, { color: colors.secondary }]}>
+               {sentiment?.value_classification} {sentiment?.value}
+             </Text>
           </View>
         </View>
-
-        {/* Filter Pills */}
-        <View style={styles.filterRow}>
-          {(['all', 'crypto', 'stock'] as const).map((type) => (
-            <Pressable
-              key={type}
-              onPress={() => setFilter(type)}
-              style={[
-                styles.filterPill,
-                {
-                  backgroundColor: filter === type ? colors.accent : 'transparent',
-                  borderColor: filter === type ? colors.accent : colors.border,
-                }
-              ]}
-            >
-              <Text style={[  
-                styles.filterText,
-                { color: filter === type ? '#FFFFFF' : colors.text }
-              ]}>
-                {type === 'all' ? 'All' : type === 'crypto' ? 'Crypto' : 'Stocks'}
-              </Text>
-            </Pressable>
-          ))}
-        </View>
+        
+        <Pressable 
+          onPress={toggleTheme} 
+          style={({ pressed }) => [
+            styles.themeButton,
+            { backgroundColor: pressed ? 'rgba(255,255,255,0.05)' : 'transparent' }
+          ]}
+          hitSlop={30}
+        >
+          {colorScheme === 'dark' ? (
+            <Sun size={24} color="#FFD700" />
+          ) : (
+            <Moon size={24} color="#555" />
+          )}
+        </Pressable>
       </View>
 
-      <FlashList
-        data={filteredData}
-        keyExtractor={(item) => item.id}
+      <ScrollView 
+        stickyHeaderIndices={[1]} 
+        showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl 
             refreshing={marketQuery.isRefetching} 
             onRefresh={marketQuery.refetch} 
-            tintColor={colors.accent} 
+            tintColor={colors.accent}
           />
         }
-        contentContainerStyle={styles.content}
-        ListEmptyComponent={
-          <View style={styles.emptyState}>
-            <Text style={[styles.emptyTitle, { color: colors.text }]}>No market data</Text>
-            <Text style={[styles.emptyBody, { color: colors.icon }]}>Pull to refresh</Text>
+      >
+        {/* Search - Minimal Line */}
+        <View style={styles.searchSection}>
+          <View style={[styles.searchBox, { borderBottomColor: colors.border }]}>
+            <Search size={16} color={colors.secondary} />
+            <TextInput
+              style={[styles.searchInput, { color: colors.text }]}
+              placeholder={`Search ${activeTab}...`}
+              placeholderTextColor="rgba(150,150,150,0.5)"
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+            />
           </View>
-        }
-        renderItem={({ item }) => (
-          <MarketRow 
-            item={item} 
-            onPress={() => {
-              router.push({
-                pathname: '/market/[symbol]',
-                params: { 
-                  symbol: item.symbol,
-                  type: item.type
-                }
-              });
-            }} 
-          />
-        )}
-      />
+        </View>
+
+        {/* Minimal Navigation */}
+        <View style={[styles.tabContainer, { backgroundColor: colors.background }]}>
+          <View style={styles.tabBar}>
+             <Pressable 
+               onPress={() => setActiveTab('crypto')}
+               style={[styles.tabButton, activeTab === 'crypto' && styles.tabButtonActive]}
+             >
+               <Text style={[styles.tabText, { color: activeTab === 'crypto' ? colors.text : colors.secondary }]}>Crypto</Text>
+               {activeTab === 'crypto' && <View style={[styles.activeIndicator, { backgroundColor: colors.text }]} />}
+             </Pressable>
+             <Pressable 
+               onPress={() => setActiveTab('stocks')}
+               style={[styles.tabButton, activeTab === 'stocks' && styles.tabButtonActive]}
+             >
+               <Text style={[styles.tabText, { color: activeTab === 'stocks' ? colors.text : colors.secondary }]}>Stocks</Text>
+               {activeTab === 'stocks' && <View style={[styles.activeIndicator, { backgroundColor: colors.text }]} />}
+             </Pressable>
+          </View>
+        </View>
+
+        {/* List Section */}
+        <View style={styles.listContainer}>
+          <View style={styles.listHeader}>
+             <Text style={[styles.listLabel, { color: colors.secondary }]}>Symbol</Text>
+             <View style={{ flex: 1, alignItems: 'center' }}>
+                <Text style={[styles.listLabel, { color: colors.secondary }]}>Trend</Text>
+             </View>
+             <Text style={[styles.listLabel, { color: colors.secondary, textAlign: 'right' }]}>Price</Text>
+          </View>
+          {filteredData.map((item) => (
+            <MarketRow 
+              key={item.id} 
+              item={item} 
+              onPress={() => router.push({ pathname: '/market/[symbol]', params: { symbol: item.symbol, type: item.type } })} 
+            />
+          ))}
+          {filteredData.length === 0 && (
+            <View style={styles.emptyContainer}>
+               <Text style={[styles.emptyText, { color: colors.secondary }]}>No matches found</Text>
+            </View>
+          )}
+        </View>
+
+        <View style={{ height: 100 }} />
+      </ScrollView>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   header: {
-    paddingHorizontal: 20,
-    paddingTop: 60,
-    paddingBottom: 16,
-    borderBottomWidth: 1,
+    paddingHorizontal: 24,
+    paddingTop: 70,
+    paddingBottom: 24,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
   },
-  headerContent: {
+  headerTitle: {
+    fontSize: 28,
+    fontWeight: '300',
+    letterSpacing: -0.5,
+  },
+  sentimentMinimal: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 16,
+    gap: 6,
+    marginTop: 4,
   },
-  logo: {
-    width: 180,
-    height: 48,
+  sentimentDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
   },
-  headerRight: {
-    alignItems: 'flex-end',
-  },
-  marketLabel: {
-    fontSize: 11,
+  sentimentText: {
+    fontSize: 12,
     fontWeight: '500',
     textTransform: 'uppercase',
-    letterSpacing: 0.5,
-    marginBottom: 4,
+    letterSpacing: 1,
   },
-  statsRow: {
-    flexDirection: 'row',
-    gap: 8,
+  themeButton: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  statBadge: {
+  searchSection: {
+    paddingHorizontal: 24,
+    marginBottom: 20,
+  },
+  searchBox: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
+    height: 44,
+    borderBottomWidth: 1,
+    gap: 12,
   },
-  statText: {
-    fontSize: 13,
-    fontWeight: '600',
+  searchInput: {
+    flex: 1,
+    fontSize: 15,
+    fontWeight: '400',
   },
-  filterRow: {
+  tabContainer: {
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+  },
+  tabBar: {
     flexDirection: 'row',
-    gap: 8,
+    gap: 32,
   },
-  filterPill: {
-    paddingHorizontal: 16,
-    paddingVertical: 6,
-    borderRadius: 16,
-    borderWidth: 1,
+  tabButton: {
+    paddingVertical: 8,
+    position: 'relative',
   },
-  filterText: {
-    fontSize: 13,
+  tabButtonActive: {
+  },
+  tabText: {
+    fontSize: 16,
+    fontWeight: '500',
+  },
+  activeIndicator: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: 2,
+    borderRadius: 1,
+  },
+  listContainer: {
+    paddingTop: 12,
+  },
+  listHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingHorizontal: 24,
+    marginBottom: 16,
+    alignItems: 'center',
+  },
+  listLabel: {
+    fontSize: 11,
     fontWeight: '600',
-  },
-  content: {
-    paddingBottom: 120,
+    textTransform: 'uppercase',
+    letterSpacing: 1.5,
+    opacity: 0.5,
   },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-    borderBottomWidth: 1,
+    paddingVertical: 18,
+    paddingHorizontal: 24,
   },
   leftSection: {
-    width: 80,
+    flex: 1.5,
   },
-  symbol: {
-    fontSize: 16,
-    fontWeight: '700',
-    letterSpacing: -0.3,
-    marginBottom: 2,
-  },
-  type: {
-    fontSize: 11,
-    fontWeight: '500',
-  },
-  chartSection: {
+  middleSection: {
     flex: 1,
     alignItems: 'center',
+    justifyContent: 'center',
+  },
+  symbolContainer: {
+    gap: 2,
+  },
+  symbol: {
+    fontSize: 18,
+    fontWeight: '500',
+    letterSpacing: -0.2,
+  },
+  name: {
+    fontSize: 12,
+    fontWeight: '400',
+    opacity: 0.7,
   },
   rightSection: {
-    width: 100,
+    flex: 1.5,
     alignItems: 'flex-end',
+    gap: 2,
   },
   price: {
-    fontSize: 15,
-    fontWeight: '700',
-    letterSpacing: -0.3,
-    marginBottom: 2,
+    fontSize: 18,
+    fontWeight: '500',
+    letterSpacing: -0.2,
   },
-  change: {
-    fontSize: 13,
+  changeText: {
+    fontSize: 14,
     fontWeight: '600',
   },
-  emptyState: {
-    paddingVertical: 100,
+  emptyContainer: {
+    paddingVertical: 80,
     alignItems: 'center',
-    gap: 8,
   },
-  emptyTitle: {
-    fontSize: 17,
-    fontWeight: '600',
-  },
-  emptyBody: {
-    fontSize: 15,
+  emptyText: {
+    fontSize: 14,
+    fontWeight: '400',
+    letterSpacing: 0.5,
   },
 });
