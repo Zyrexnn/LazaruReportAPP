@@ -5,7 +5,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useEffect } from 'react';
 import 'react-native-reanimated';
 
-import { useColorScheme } from '@/hooks/use-color-scheme';
+import { useIsDark } from '@/hooks/use-color-scheme';
 import { initializeDatabase } from '@/src/services/db';
 
 export const unstable_settings = {
@@ -15,7 +15,7 @@ export const unstable_settings = {
 const queryClient = new QueryClient();
 
 export default function RootLayout() {
-  const colorScheme = useColorScheme();
+  const isDark = useIsDark();
 
   useEffect(() => {
     initializeDatabase().catch(() => undefined);
@@ -23,13 +23,14 @@ export default function RootLayout() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+      <ThemeProvider value={isDark ? DarkTheme : DefaultTheme}>
         <Stack>
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
           <Stack.Screen name="news/[id]" options={{ headerShown: false }} />
+          <Stack.Screen name="market/[symbol]" options={{ headerShown: false }} />
           <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
         </Stack>
-        <StatusBar style="dark" />
+        <StatusBar style={isDark ? 'light' : 'dark'} />
       </ThemeProvider>
     </QueryClientProvider>
   );

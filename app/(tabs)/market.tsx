@@ -1,83 +1,104 @@
 import { SkeletonBlock } from '@/components/Skeleton';
-import { Colors } from '@/constants/theme';
-import { useColorScheme } from '@/hooks/use-color-scheme';
+import { BentoConfig, BorderWidth, Radius, Shadows, Spacing, Typography } from '@/constants/theme';
+import { useThemeColors, useIsDark } from '@/hooks/use-color-scheme';
 import { fetchMarketSnapshot } from '@/src/services/newsApi';
 import type { MarketTicker } from '@/src/types/news';
-import { useThemeStore } from '@/src/store/useThemeStore';
+import { Sparkline } from '@/src/components/Sparkline';
 import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { Search, Sun, Moon } from 'lucide-react-native';
+import { Search, TrendingUp, TrendingDown } from 'lucide-react-native';
 import { useMemo, useState } from 'react';
 import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
-import { Sparkline } from '@/src/components/Sparkline';
 
 function MarketSkeleton() {
-  const colorScheme = useColorScheme() ?? 'light';
-  const colors = Colors[colorScheme];
+  const colors = useThemeColors();
   return (
-    <View style={{ paddingHorizontal: 24, paddingTop: 80, backgroundColor: colors.background, flex: 1 }}>
-      <SkeletonBlock height={30} width={120} radius={4} style={{ marginBottom: 40 }} />
-      <SkeletonBlock height={60} radius={12} style={{ marginBottom: 20 }} />
-      <SkeletonBlock height={60} radius={12} style={{ marginBottom: 20 }} />
-      <SkeletonBlock height={60} radius={12} />
+    <View style={{ paddingHorizontal: BentoConfig.paddingH, paddingTop: 70, backgroundColor: colors.background, flex: 1 }}>
+      <SkeletonBlock height={28} width={120} radius={Radius.sm} style={{ marginBottom: 8 }} />
+      <SkeletonBlock height={14} width={180} radius={Radius.xs} style={{ marginBottom: 32 }} />
+      <View style={{ flexDirection: 'row', gap: BentoConfig.gap, marginBottom: 24 }}>
+        <SkeletonBlock height={90} radius={Radius.lg} style={{ flex: 1 }} />
+        <SkeletonBlock height={90} radius={Radius.lg} style={{ flex: 1 }} />
+      </View>
+      <SkeletonBlock height={44} radius={Radius.md} style={{ marginBottom: 20 }} />
+      {[1, 2, 3, 4].map((i) => (
+        <SkeletonBlock key={i} height={64} radius={Radius.md} style={{ marginBottom: 12 }} />
+      ))}
+    </View>
+  );
+}
+
+function StatBento({ label, value, sub, color }: { label: string; value: string; sub?: string; color?: string }) {
+  const colors = useThemeColors();
+  return (
+    <View style={[styles.statBento, { backgroundColor: colors.cardBg, borderColor: colors.cardBorder }]}>
+      <Text style={[styles.statLabel, { color: colors.textSecondary }]}>{label}</Text>
+      <Text style={[styles.statValue, { color: color || colors.text }]}>{value}</Text>
+      {sub && <Text style={[styles.statSub, { color: colors.textSecondary }]}>{sub}</Text>}
     </View>
   );
 }
 
 function MarketRow({ item, onPress }: { item: MarketTicker; onPress: () => void }) {
-  const colorScheme = useColorScheme() ?? 'light';
-  const colors = Colors[colorScheme];
+  const colors = useThemeColors();
   const positive = item.changePercent24h >= 0;
-  const indicatorColor = positive ? '#00FFA3' : '#FF3B3B';
+  const changeColor = positive ? colors.success : colors.error;
 
   return (
-    <Pressable 
+    <Pressable
       onPress={onPress}
       style={({ pressed }) => [
-        styles.row, 
-        pressed && { backgroundColor: 'rgba(255,255,255,0.03)' }
+        styles.row,
+        { borderBottomColor: colors.border },
+        pressed && { backgroundColor: colors.accentSoft },
       ]}
     >
+      {/* Symbol */}
       <View style={styles.leftSection}>
-        <View style={styles.symbolContainer}>
+        <View style={[styles.symbolIcon, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+          <Text style={[styles.symbolIconText, { color: colors.text }]}>
+            {item.symbol.charAt(0)}
+          </Text>
+        </View>
+        <View style={styles.symbolInfo}>
           <Text style={[styles.symbol, { color: colors.text }]}>{item.symbol}</Text>
-          <Text style={[styles.name, { color: colors.secondary }]} numberOfLines={1}>{item.name}</Text>
+          <Text style={[styles.name, { color: colors.textSecondary }]} numberOfLines={1}>
+            {item.name}
+          </Text>
         </View>
       </View>
 
+      {/* Sparkline */}
       <View style={styles.middleSection}>
-        <Sparkline 
-          data={item.sparkline} 
-          color={indicatorColor} 
-          width={80} 
-          height={32} 
-        />
+        <Sparkline data={item.sparkline} color={changeColor} width={72} height={28} />
       </View>
-      
+
+      {/* Price */}
       <View style={styles.rightSection}>
         <Text style={[styles.price, { color: colors.text }]}>
-          {item.price.toLocaleString('en-US', { 
+          ${item.price.toLocaleString('en-US', {
             minimumFractionDigits: 2,
-            maximumFractionDigits: item.price > 100 ? 2 : 4 
+            maximumFractionDigits: item.price > 100 ? 2 : 4,
           })}
         </Text>
-        <Text style={[styles.changeText, { color: indicatorColor }]}>
-          {positive ? '+' : ''}{item.changePercent24h.toFixed(2)}%
-        </Text>
+        <View style={[styles.changeBadge, { backgroundColor: positive ? 'rgba(16,185,129,0.12)' : 'rgba(239,68,68,0.12)' }]}>
+          <Text style={[styles.changeText, { color: changeColor }]}>
+            {positive ? '+' : ''}{item.changePercent24h.toFixed(2)}%
+          </Text>
+        </View>
       </View>
     </Pressable>
   );
 }
 
 export default function MarketScreen() {
-  const colorScheme = useColorScheme() ?? 'light';
-  const colors = Colors[colorScheme];
-  const { toggleTheme } = useThemeStore();
+  const colors = useThemeColors();
+  const isDark = useIsDark();
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState<'crypto' | 'stocks'>('crypto');
   const router = useRouter();
-  
+
   const marketQuery = useQuery({
     queryKey: ['market-snapshot'],
     queryFn: fetchMarketSnapshot,
@@ -96,120 +117,154 @@ export default function MarketScreen() {
 
   const filteredData = useMemo(() => {
     let data = marketQuery.data ?? [];
-    data = data.filter(item => item.type === activeTab);
+    data = data.filter((item) => item.type === activeTab);
     if (searchQuery.trim() !== '') {
-      data = data.filter(item => 
-        item.symbol.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        item.name.toLowerCase().includes(searchQuery.toLowerCase())
+      data = data.filter(
+        (item) =>
+          item.symbol.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          item.name.toLowerCase().includes(searchQuery.toLowerCase())
       );
     }
     return data;
   }, [marketQuery.data, searchQuery, activeTab]);
+
+  // Compute market stats
+  const topGainer = useMemo(() => {
+    const data = (marketQuery.data ?? []).filter((i) => i.type === activeTab);
+    return data.reduce((best, item) => (item.changePercent24h > (best?.changePercent24h ?? -Infinity) ? item : best), data[0]);
+  }, [marketQuery.data, activeTab]);
+
+  const topLoser = useMemo(() => {
+    const data = (marketQuery.data ?? []).filter((i) => i.type === activeTab);
+    return data.reduce((worst, item) => (item.changePercent24h < (worst?.changePercent24h ?? Infinity) ? item : worst), data[0]);
+  }, [marketQuery.data, activeTab]);
 
   if (marketQuery.isLoading) {
     return <MarketSkeleton />;
   }
 
   const sentiment = sentimentQuery.data;
+  const sentimentValue = parseInt(sentiment?.value ?? '50');
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
-      <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
-      
+      <StatusBar style={isDark ? 'light' : 'dark'} />
+
+      {/* ── Header ────────────────────────────────────────────── */}
       <View style={styles.header}>
-        <View style={{ flex: 1 }}>
+        <View>
           <Text style={[styles.headerTitle, { color: colors.text }]}>Markets</Text>
-          <View style={styles.sentimentMinimal}>
-             <View style={[styles.sentimentDot, { backgroundColor: parseInt(sentiment?.value ?? '50') > 50 ? '#00FFA3' : '#FF3B3B' }]} />
-             <Text style={[styles.sentimentText, { color: colors.secondary }]}>
-               {sentiment?.value_classification} {sentiment?.value}
-             </Text>
+          <View style={styles.sentimentRow}>
+            <View style={[styles.sentimentDot, { backgroundColor: sentimentValue > 50 ? colors.success : colors.error }]} />
+            <Text style={[styles.sentimentText, { color: colors.textSecondary }]}>
+              {sentiment?.value_classification ?? 'Neutral'} · {sentiment?.value ?? '50'}
+            </Text>
           </View>
         </View>
-        
-        <Pressable 
-          onPress={toggleTheme} 
-          style={({ pressed }) => [
-            styles.themeButton,
-            { backgroundColor: pressed ? 'rgba(255,255,255,0.05)' : 'transparent' }
-          ]}
-          hitSlop={30}
-        >
-          {colorScheme === 'dark' ? (
-            <Sun size={24} color="#FFD700" />
-          ) : (
-            <Moon size={24} color="#555" />
-          )}
-        </Pressable>
       </View>
 
-      <ScrollView 
-        stickyHeaderIndices={[1]} 
+      <ScrollView
         showsVerticalScrollIndicator={false}
         refreshControl={
-          <RefreshControl 
-            refreshing={marketQuery.isRefetching} 
-            onRefresh={marketQuery.refetch} 
+          <RefreshControl
+            refreshing={marketQuery.isRefetching}
+            onRefresh={marketQuery.refetch}
             tintColor={colors.accent}
           />
         }
       >
-        {/* Search - Minimal Line */}
+        {/* ── Bento Stat Cards ────────────────────────────────── */}
+        <View style={styles.bentoRow}>
+          {topGainer && (
+            <StatBento
+              label="Top Gainer"
+              value={topGainer.symbol}
+              sub={`+${topGainer.changePercent24h.toFixed(2)}%`}
+              color={colors.success}
+            />
+          )}
+          {topLoser && (
+            <StatBento
+              label="Top Loser"
+              value={topLoser.symbol}
+              sub={`${topLoser.changePercent24h.toFixed(2)}%`}
+              color={colors.error}
+            />
+          )}
+        </View>
+
+        {/* ── Search ──────────────────────────────────────────── */}
         <View style={styles.searchSection}>
-          <View style={[styles.searchBox, { borderBottomColor: colors.border }]}>
-            <Search size={16} color={colors.secondary} />
+          <View style={[styles.searchBox, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+            <Search size={16} color={colors.textSecondary} />
             <TextInput
               style={[styles.searchInput, { color: colors.text }]}
               placeholder={`Search ${activeTab}...`}
-              placeholderTextColor="rgba(150,150,150,0.5)"
+              placeholderTextColor={colors.textSecondary}
               value={searchQuery}
               onChangeText={setSearchQuery}
             />
           </View>
         </View>
 
-        {/* Minimal Navigation */}
-        <View style={[styles.tabContainer, { backgroundColor: colors.background }]}>
-          <View style={styles.tabBar}>
-             <Pressable 
-               onPress={() => setActiveTab('crypto')}
-               style={[styles.tabButton, activeTab === 'crypto' && styles.tabButtonActive]}
-             >
-               <Text style={[styles.tabText, { color: activeTab === 'crypto' ? colors.text : colors.secondary }]}>Crypto</Text>
-               {activeTab === 'crypto' && <View style={[styles.activeIndicator, { backgroundColor: colors.text }]} />}
-             </Pressable>
-             <Pressable 
-               onPress={() => setActiveTab('stocks')}
-               style={[styles.tabButton, activeTab === 'stocks' && styles.tabButtonActive]}
-             >
-               <Text style={[styles.tabText, { color: activeTab === 'stocks' ? colors.text : colors.secondary }]}>Stocks</Text>
-               {activeTab === 'stocks' && <View style={[styles.activeIndicator, { backgroundColor: colors.text }]} />}
-             </Pressable>
-          </View>
+        {/* ── Tab Switcher ────────────────────────────────────── */}
+        <View style={styles.tabContainer}>
+          {(['crypto', 'stocks'] as const).map((tab) => {
+            const active = activeTab === tab;
+            return (
+              <Pressable
+                key={tab}
+                onPress={() => setActiveTab(tab)}
+                style={[
+                  styles.tabBtn,
+                  {
+                    backgroundColor: active ? colors.accent : 'transparent',
+                    borderColor: active ? colors.accent : colors.border,
+                  },
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.tabBtnText,
+                    { color: active ? colors.badgeText : colors.textSecondary },
+                  ]}
+                >
+                  {tab === 'crypto' ? 'Crypto' : 'Stocks'}
+                </Text>
+              </Pressable>
+            );
+          })}
+          <View style={{ flex: 1 }} />
+          <Text style={[styles.assetCount, { color: colors.textSecondary }]}>
+            {filteredData.length} assets
+          </Text>
         </View>
 
-        {/* List Section */}
-        <View style={styles.listContainer}>
-          <View style={styles.listHeader}>
-             <Text style={[styles.listLabel, { color: colors.secondary }]}>Symbol</Text>
-             <View style={{ flex: 1, alignItems: 'center' }}>
-                <Text style={[styles.listLabel, { color: colors.secondary }]}>Trend</Text>
-             </View>
-             <Text style={[styles.listLabel, { color: colors.secondary, textAlign: 'right' }]}>Price</Text>
-          </View>
-          {filteredData.map((item) => (
-            <MarketRow 
-              key={item.id} 
-              item={item} 
-              onPress={() => router.push({ pathname: '/market/[symbol]', params: { symbol: item.symbol, type: item.type } })} 
-            />
-          ))}
-          {filteredData.length === 0 && (
-            <View style={styles.emptyContainer}>
-               <Text style={[styles.emptyText, { color: colors.secondary }]}>No matches found</Text>
-            </View>
-          )}
+        {/* ── List Header ─────────────────────────────────────── */}
+        <View style={styles.listHeader}>
+          <Text style={[styles.listLabel, { color: colors.textSecondary }]}>Asset</Text>
+          <Text style={[styles.listLabel, { color: colors.textSecondary, textAlign: 'center' }]}>7h</Text>
+          <Text style={[styles.listLabel, { color: colors.textSecondary, textAlign: 'right' }]}>Price</Text>
         </View>
+
+        {/* ── Market List ─────────────────────────────────────── */}
+        {filteredData.map((item) => (
+          <MarketRow
+            key={item.id}
+            item={item}
+            onPress={() =>
+              router.push({
+                pathname: '/market/[symbol]',
+                params: { symbol: item.symbol, type: item.type },
+              })
+            }
+          />
+        ))}
+        {filteredData.length === 0 && (
+          <View style={styles.emptyContainer}>
+            <Text style={[styles.emptyText, { color: colors.textSecondary }]}>No matches found</Text>
+          </View>
+        )}
 
         <View style={{ height: 100 }} />
       </ScrollView>
@@ -218,150 +273,181 @@ export default function MarketScreen() {
 }
 
 const styles = StyleSheet.create({
+  // ── Header ─────────────────────────────────────────────────
   header: {
-    paddingHorizontal: 24,
-    paddingTop: 70,
-    paddingBottom: 24,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
+    paddingHorizontal: BentoConfig.paddingH,
+    paddingTop: 60,
+    paddingBottom: Spacing.lg,
   },
   headerTitle: {
-    fontSize: 28,
-    fontWeight: '300',
-    letterSpacing: -0.5,
+    ...Typography.display,
+    fontSize: 32,
   },
-  sentimentMinimal: {
+  sentimentRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
     marginTop: 4,
   },
   sentimentDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
+    width: 7,
+    height: 7,
+    borderRadius: 4,
   },
   sentimentText: {
-    fontSize: 12,
-    fontWeight: '500',
+    ...Typography.caption,
     textTransform: 'uppercase',
     letterSpacing: 1,
   },
-  themeButton: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    alignItems: 'center',
-    justifyContent: 'center',
+
+  // ── Bento Stats ────────────────────────────────────────────
+  bentoRow: {
+    flexDirection: 'row',
+    paddingHorizontal: BentoConfig.paddingH,
+    gap: BentoConfig.gap,
+    marginBottom: Spacing.xl,
   },
+  statBento: {
+    flex: 1,
+    padding: Spacing.lg,
+    borderRadius: Radius.lg,
+    borderWidth: BorderWidth.normal,
+    gap: 4,
+  },
+  statLabel: {
+    ...Typography.overline,
+  },
+  statValue: {
+    ...Typography.h2,
+    fontSize: 22,
+  },
+  statSub: {
+    ...Typography.caption,
+    marginTop: 2,
+  },
+
+  // ── Search ─────────────────────────────────────────────────
   searchSection: {
-    paddingHorizontal: 24,
-    marginBottom: 20,
+    paddingHorizontal: BentoConfig.paddingH,
+    marginBottom: Spacing.lg,
   },
   searchBox: {
     flexDirection: 'row',
     alignItems: 'center',
     height: 44,
-    borderBottomWidth: 1,
-    gap: 12,
+    borderRadius: Radius.md,
+    borderWidth: BorderWidth.normal,
+    paddingHorizontal: Spacing.md,
+    gap: Spacing.sm,
   },
   searchInput: {
     flex: 1,
     fontSize: 15,
-    fontWeight: '400',
-  },
-  tabContainer: {
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-  },
-  tabBar: {
-    flexDirection: 'row',
-    gap: 32,
-  },
-  tabButton: {
-    paddingVertical: 8,
-    position: 'relative',
-  },
-  tabButtonActive: {
-  },
-  tabText: {
-    fontSize: 16,
     fontWeight: '500',
   },
-  activeIndicator: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    height: 2,
-    borderRadius: 1,
+
+  // ── Tabs ───────────────────────────────────────────────────
+  tabContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: BentoConfig.paddingH,
+    marginBottom: Spacing.lg,
+    gap: Spacing.sm,
   },
-  listContainer: {
-    paddingTop: 12,
+  tabBtn: {
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.sm,
+    borderRadius: Radius.sm,
+    borderWidth: BorderWidth.normal,
   },
+  tabBtnText: {
+    fontSize: 13,
+    fontWeight: '800',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  assetCount: {
+    ...Typography.caption,
+  },
+
+  // ── List ───────────────────────────────────────────────────
   listHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    paddingHorizontal: 24,
-    marginBottom: 16,
+    paddingHorizontal: BentoConfig.paddingH,
+    marginBottom: Spacing.md,
     alignItems: 'center',
   },
   listLabel: {
-    fontSize: 11,
-    fontWeight: '600',
-    textTransform: 'uppercase',
-    letterSpacing: 1.5,
-    opacity: 0.5,
+    ...Typography.overline,
+    flex: 1,
+    opacity: 0.6,
   },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 18,
-    paddingHorizontal: 24,
+    paddingVertical: Spacing.lg,
+    paddingHorizontal: BentoConfig.paddingH,
+    borderBottomWidth: 1,
   },
   leftSection: {
     flex: 1.5,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.md,
+  },
+  symbolIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: Radius.sm,
+    borderWidth: BorderWidth.thin,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  symbolIconText: {
+    fontSize: 14,
+    fontWeight: '900',
+  },
+  symbolInfo: {
+    gap: 1,
   },
   middleSection: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  symbolContainer: {
-    gap: 2,
-  },
   symbol: {
-    fontSize: 18,
-    fontWeight: '500',
+    fontSize: 16,
+    fontWeight: '700',
     letterSpacing: -0.2,
   },
   name: {
-    fontSize: 12,
-    fontWeight: '400',
-    opacity: 0.7,
+    fontSize: 11,
+    fontWeight: '500',
   },
   rightSection: {
     flex: 1.5,
     alignItems: 'flex-end',
-    gap: 2,
+    gap: 4,
   },
   price: {
-    fontSize: 18,
-    fontWeight: '500',
-    letterSpacing: -0.2,
+    ...Typography.mono,
+    fontSize: 16,
+  },
+  changeBadge: {
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: 2,
+    borderRadius: Radius.xs,
   },
   changeText: {
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: 12,
+    fontWeight: '800',
   },
   emptyContainer: {
     paddingVertical: 80,
     alignItems: 'center',
   },
   emptyText: {
-    fontSize: 14,
-    fontWeight: '400',
-    letterSpacing: 0.5,
+    ...Typography.body,
   },
 });

@@ -1,19 +1,19 @@
 import { SkeletonBlock } from '@/components/Skeleton';
-import { Colors } from '@/constants/theme';
-import { useColorScheme } from '@/hooks/use-color-scheme';
+import { BentoConfig, BorderWidth, Radius, Shadows, Spacing, Typography } from '@/constants/theme';
+import { useThemeColors, useIsDark } from '@/hooks/use-color-scheme';
 import { NewsCard } from '@/src/components/NewsCard';
+import { ThemeSwitcher } from '@/src/components/ThemeSwitcher';
 import { addBookmark, getBookmarks, removeBookmark } from '@/src/services/db';
 import { fetchUnifiedNews } from '@/src/services/newsApi';
 import { useNewsStore } from '@/src/store/useNewsStore';
-import { useThemeStore } from '@/src/store/useThemeStore';
 import { NewsArticle } from '@/src/types/news';
 import { FlashList } from '@shopify/flash-list';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { ChevronRight, Search, Sun, Moon } from 'lucide-react-native';
+import { ChevronRight, Palette, Search, X } from 'lucide-react-native';
 import { useMemo, useState } from 'react';
-import { Image, Pressable, RefreshControl, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, TextInput, View, useWindowDimensions } from 'react-native';
 
 const bookmarkQueryKey = ['bookmarks'];
 const newsQueryKey = ['news-feed'];
@@ -28,14 +28,17 @@ const CATEGORIES = [
 ];
 
 function NewsSkeleton() {
-  const colorScheme = useColorScheme() ?? 'light';
-  const colors = Colors[colorScheme];
+  const colors = useThemeColors();
   return (
-    <View style={{ paddingHorizontal: 16, backgroundColor: colors.background, flex: 1, paddingTop: 60 }}>
-      <SkeletonBlock height={40} radius={8} style={{ marginBottom: 20 }} />
-      <SkeletonBlock height={200} radius={12} style={{ marginBottom: 12 }} />
-      <SkeletonBlock height={140} radius={12} style={{ marginBottom: 12 }} />
-      <SkeletonBlock height={140} radius={12} />
+    <View style={{ paddingHorizontal: BentoConfig.paddingH, backgroundColor: colors.background, flex: 1, paddingTop: 70 }}>
+      <SkeletonBlock height={28} width={140} radius={Radius.sm} style={{ marginBottom: 8 }} />
+      <SkeletonBlock height={16} width={200} radius={Radius.xs} style={{ marginBottom: 24 }} />
+      <SkeletonBlock height={40} radius={Radius.md} style={{ marginBottom: 24 }} />
+      <SkeletonBlock height={260} radius={Radius.xl} style={{ marginBottom: BentoConfig.gap }} />
+      <View style={{ flexDirection: 'row', gap: BentoConfig.gap }}>
+        <SkeletonBlock height={180} radius={Radius.lg} style={{ flex: 1 }} />
+        <SkeletonBlock height={180} radius={Radius.lg} style={{ flex: 1 }} />
+      </View>
     </View>
   );
 }
@@ -44,12 +47,14 @@ export default function HomeScreen() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const { setSelectedArticle } = useNewsStore();
-  const colorScheme = useColorScheme() ?? 'light';
-  const colors = Colors[colorScheme];
-  const { toggleTheme } = useThemeStore();
+  const colors = useThemeColors();
+  const isDark = useIsDark();
+  const { width: screenWidth } = useWindowDimensions();
+
   const [category, setCategory] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearching, setIsSearching] = useState(false);
+  const [showThemes, setShowThemes] = useState(false);
 
   const newsQuery = useQuery({
     queryKey: newsQueryKey,
@@ -69,16 +74,17 @@ export default function HomeScreen() {
 
   const filteredNews = useMemo(() => {
     let allNews = newsQuery.data ?? [];
-    
-    // Ensure sorted by newest
-    allNews = [...allNews].sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime());
-    
+    allNews = [...allNews].sort(
+      (a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime()
+    );
+
     if (searchQuery.trim() !== '') {
       const q = searchQuery.toLowerCase();
-      allNews = allNews.filter(article => 
-        article.title.toLowerCase().includes(q) || 
-        article.summary?.toLowerCase().includes(q) || 
-        article.source.toLowerCase().includes(q)
+      allNews = allNews.filter(
+        (article) =>
+          article.title.toLowerCase().includes(q) ||
+          article.summary?.toLowerCase().includes(q) ||
+          article.source.toLowerCase().includes(q)
       );
     } else if (category !== 'all') {
       const keywords: Record<string, string[]> = {
@@ -88,10 +94,9 @@ export default function HomeScreen() {
         wall_street: ['market', 'stock', 'trading', 'wall street', 'dow', 'nasdaq', 's&p', 'fed', 'inflation', 'economy'],
         startups: ['startup', 'founder', 'funding', 'vc', 'venture', 'y combinator', 'seed', 'series'],
       };
-      
-      allNews = allNews.filter(article => {
+      allNews = allNews.filter((article) => {
         const text = `${article.title} ${article.summary}`.toLowerCase();
-        return keywords[category]?.some(keyword => text.includes(keyword));
+        return keywords[category]?.some((keyword) => text.includes(keyword));
       });
     }
     return allNews;
@@ -127,85 +132,121 @@ export default function HomeScreen() {
     return <NewsSkeleton />;
   }
 
-  const currentDate = new Date().toLocaleDateString('en-GB', { 
-    weekday: 'long', 
-    day: 'numeric', 
-    month: 'long' 
+  const currentDate = new Date().toLocaleDateString('en-GB', {
+    weekday: 'short',
+    day: 'numeric',
+    month: 'short',
   });
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
-      <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
-      
+      <StatusBar style={isDark ? 'light' : 'dark'} />
+
+      {/* ── Header ────────────────────────────────────────────── */}
       <View style={[styles.header, { backgroundColor: colors.background }]}>
         <View style={styles.headerTop}>
-          <Text style={[styles.dateText, { color: colors.secondary }]}>{currentDate}</Text>
-          <View style={{ flexDirection: 'row', gap: 16 }}>
-            <Pressable onPress={toggleTheme}>
-               {colorScheme === 'dark' ? <Sun size={24} color={colors.primary} /> : <Moon size={24} color={colors.primary} />}
+          <View>
+            <Text style={[styles.dateText, { color: colors.textSecondary }]}>{currentDate}</Text>
+            <Text style={[styles.mainTitle, { color: colors.text }]}>Lazarus</Text>
+          </View>
+          <View style={styles.headerActions}>
+            <Pressable
+              onPress={() => setShowThemes(!showThemes)}
+              style={[styles.iconBtn, { backgroundColor: colors.surface, borderColor: colors.border }]}
+            >
+              <Palette size={18} color={colors.accent} strokeWidth={2} />
             </Pressable>
-            <Pressable onPress={() => setIsSearching(!isSearching)}>
-               <Search size={24} color={colors.primary} strokeWidth={2} />
+            <Pressable
+              onPress={() => {
+                setIsSearching(!isSearching);
+                if (isSearching) setSearchQuery('');
+              }}
+              style={[styles.iconBtn, { backgroundColor: colors.surface, borderColor: colors.border }]}
+            >
+              {isSearching ? (
+                <X size={18} color={colors.text} strokeWidth={2} />
+              ) : (
+                <Search size={18} color={colors.text} strokeWidth={2} />
+              )}
             </Pressable>
           </View>
         </View>
 
-        {isSearching ? (
-          <TextInput
-            style={[styles.searchInput, { color: colors.text, backgroundColor: colors.surface, borderColor: colors.border }]}
-            placeholder="Search news..."
-            placeholderTextColor={colors.secondary}
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-            autoFocus
-          />
-        ) : (
-          <Text style={[styles.mainTitle, { color: colors.primary }]}>Breaking News</Text>
+        {/* Theme Switcher */}
+        {showThemes && (
+          <View style={[styles.themeSwitcherContainer, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+            <ThemeSwitcher />
+          </View>
         )}
 
-        <ScrollView 
-          horizontal 
+        {/* Search */}
+        {isSearching && (
+          <View style={[styles.searchBox, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+            <Search size={16} color={colors.textSecondary} strokeWidth={2} />
+            <TextInput
+              style={[styles.searchInput, { color: colors.text }]}
+              placeholder="Search news..."
+              placeholderTextColor={colors.textSecondary}
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              autoFocus
+            />
+          </View>
+        )}
+
+        {/* Categories */}
+        <ScrollView
+          horizontal
           showsHorizontalScrollIndicator={false}
-          style={styles.categoryContainer}
           contentContainerStyle={styles.categoryContent}
         >
-          {CATEGORIES.map((cat) => (
-            <Pressable
-              key={cat.id}
-              onPress={() => {
-                setCategory(cat.id);
-                setSearchQuery('');
-              }}
-              style={[
-                styles.categoryButton,
-                category === cat.id && { borderBottomWidth: 2, borderBottomColor: colors.primary }
-              ]}
-            >
-              <Text style={[
-                styles.categoryText,
-                { color: category === cat.id ? colors.primary : colors.secondary, fontWeight: category === cat.id ? '700' : '500' }
-              ]}>
-                {cat.label}
-              </Text>
-            </Pressable>
-          ))}
+          {CATEGORIES.map((cat) => {
+            const active = category === cat.id;
+            return (
+              <Pressable
+                key={cat.id}
+                onPress={() => {
+                  setCategory(cat.id);
+                  setSearchQuery('');
+                }}
+                style={[
+                  styles.categoryPill,
+                  {
+                    backgroundColor: active ? colors.accent : colors.surface,
+                    borderColor: active ? colors.accent : colors.border,
+                  },
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.categoryText,
+                    { color: active ? colors.badgeText : colors.textSecondary },
+                  ]}
+                >
+                  {cat.label}
+                </Text>
+              </Pressable>
+            );
+          })}
         </ScrollView>
       </View>
 
+      {/* ── Content ───────────────────────────────────────────── */}
       <FlashList
         data={readLater}
         keyExtractor={(item) => item.id}
         estimatedItemSize={120}
         refreshControl={
-          <RefreshControl 
-            refreshing={newsQuery.isRefetching} 
-            onRefresh={newsQuery.refetch} 
-            tintColor={colors.accent} 
+          <RefreshControl
+            refreshing={newsQuery.isRefetching}
+            onRefresh={newsQuery.refetch}
+            tintColor={colors.accent}
           />
         }
         contentContainerStyle={styles.content}
         ListHeaderComponent={
           <>
+            {/* Featured Bento Tile */}
             {featured.length > 0 && (
               <View style={styles.featuredSection}>
                 <NewsCard
@@ -217,15 +258,20 @@ export default function HomeScreen() {
                 />
               </View>
             )}
-            
+
+            {/* Top Stories — Horizontal Bento Row */}
             {topStories.length > 0 && (
               <View style={styles.topStoriesSection}>
                 <View style={styles.sectionHeader}>
-                  <Text style={[styles.sectionTitle, { color: colors.primary }]}>Top Stories</Text>
-                  <ChevronRight size={20} color={colors.primary} />
+                  <Text style={[styles.sectionTitle, { color: colors.text }]}>Top Stories</Text>
+                  <ChevronRight size={18} color={colors.textSecondary} />
                 </View>
-                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.horizontalScrollContent}>
-                  {topStories.map(item => (
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  contentContainerStyle={styles.horizontalScrollContent}
+                >
+                  {topStories.map((item) => (
                     <NewsCard
                       key={item.id}
                       compact
@@ -237,9 +283,13 @@ export default function HomeScreen() {
               </View>
             )}
 
-             {readLater.length > 0 && (
+            {/* Read Later Header */}
+            {readLater.length > 0 && (
               <View style={styles.sectionHeader}>
-                <Text style={[styles.sectionTitle, { color: colors.primary }]}>Read Later</Text>
+                <Text style={[styles.sectionTitle, { color: colors.text }]}>Latest</Text>
+                <View style={[styles.countBadge, { backgroundColor: colors.accentSoft }]}>
+                  <Text style={[styles.countText, { color: colors.accent }]}>{readLater.length}</Text>
+                </View>
               </View>
             )}
           </>
@@ -247,7 +297,7 @@ export default function HomeScreen() {
         ListEmptyComponent={
           <View style={styles.emptyState}>
             <Text style={[styles.emptyTitle, { color: colors.text }]}>No articles found</Text>
-            <Text style={[styles.emptyBody, { color: colors.secondary }]}>
+            <Text style={[styles.emptyBody, { color: colors.textSecondary }]}>
               Try a different category or pull to refresh
             </Text>
           </View>
@@ -267,110 +317,128 @@ export default function HomeScreen() {
 }
 
 const styles = StyleSheet.create({
+  // ── Header ─────────────────────────────────────────────────
   header: {
-    paddingHorizontal: 20,
-    paddingTop: 64,
-    paddingBottom: 20,
+    paddingHorizontal: BentoConfig.paddingH,
+    paddingTop: 60,
+    paddingBottom: Spacing.md,
   },
   headerTop: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 12,
+    alignItems: 'flex-start',
+    marginBottom: Spacing.md,
   },
   dateText: {
-    fontSize: 12,
-    fontWeight: '800',
-    textTransform: 'uppercase',
-    letterSpacing: 1,
+    ...Typography.overline,
+    marginBottom: 2,
   },
   mainTitle: {
-    fontSize: 32,
-    lineHeight: 38,
-    letterSpacing: -1,
-    fontWeight: '900',
-    marginBottom: 20,
+    ...Typography.display,
   },
-  titleText: {
-    fontSize: 32,
-    lineHeight: 38,
-    letterSpacing: -1,
-    fontWeight: '900',
-    marginBottom: 20,
+  headerActions: {
+    flexDirection: 'row',
+    gap: Spacing.sm,
+    marginTop: 4,
+  },
+  iconBtn: {
+    width: 38,
+    height: 38,
+    borderRadius: Radius.md,
+    borderWidth: BorderWidth.normal,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+
+  // ── Theme Switcher ─────────────────────────────────────────
+  themeSwitcherContainer: {
+    marginBottom: Spacing.md,
+    padding: Spacing.sm,
+    borderRadius: Radius.lg,
+    borderWidth: BorderWidth.normal,
+  },
+
+  // ── Search ─────────────────────────────────────────────────
+  searchBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    height: 44,
+    borderRadius: Radius.md,
+    borderWidth: BorderWidth.normal,
+    paddingHorizontal: Spacing.md,
+    gap: Spacing.sm,
+    marginBottom: Spacing.md,
   },
   searchInput: {
-    height: 48,
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    borderWidth: 1,
-    marginBottom: 20,
-    fontSize: 16,
+    flex: 1,
+    fontSize: 15,
     fontWeight: '500',
   },
-  categoryContainer: {
-    marginBottom: 4,
-  },
-  categoryScroll: {
-    marginBottom: 4,
-  },
+
+  // ── Categories ─────────────────────────────────────────────
   categoryContent: {
-    gap: 12,
-    paddingRight: 20,
+    gap: Spacing.sm,
+    paddingRight: Spacing.xl,
   },
   categoryPill: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
-  },
-  categoryButton: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.sm,
+    borderRadius: Radius.sm,
+    borderWidth: BorderWidth.normal,
   },
   categoryText: {
-    fontSize: 14,
-    fontWeight: '700',
+    fontSize: 12,
+    fontWeight: '800',
+    letterSpacing: 0.3,
+    textTransform: 'uppercase',
   },
+
+  // ── Content ────────────────────────────────────────────────
   content: {
-    paddingHorizontal: 20,
-    paddingTop: 8,
+    paddingHorizontal: BentoConfig.paddingH,
+    paddingTop: Spacing.sm,
     paddingBottom: 100,
   },
   featuredSection: {
-    marginBottom: 12,
+    marginBottom: Spacing.sm,
   },
   topStoriesSection: {
-    marginBottom: 32,
+    marginBottom: Spacing['2xl'],
   },
   horizontalScrollContent: {
-    paddingVertical: 4,
+    paddingVertical: Spacing.xs,
   },
   sectionHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 16,
+    marginBottom: Spacing.lg,
   },
   sectionTitle: {
-    fontSize: 24,
-    fontWeight: '800',
-    letterSpacing: -0.6,
+    ...Typography.h2,
   },
+  countBadge: {
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: 2,
+    borderRadius: Radius.xs,
+  },
+  countText: {
+    fontSize: 12,
+    fontWeight: '800',
+  },
+
+  // ── Empty State ────────────────────────────────────────────
   emptyState: {
     paddingVertical: 120,
     alignItems: 'center',
-    gap: 12,
+    gap: Spacing.md,
   },
   emptyTitle: {
-    fontSize: 20,
-    fontWeight: '800',
-    letterSpacing: -0.5,
+    ...Typography.h2,
   },
   emptyBody: {
-    fontSize: 16,
+    ...Typography.body,
     textAlign: 'center',
     maxWidth: '80%',
-    lineHeight: 22,
-    fontWeight: '500',
   },
 });
