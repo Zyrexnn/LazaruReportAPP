@@ -1,0 +1,3 @@
+@echo off
+echo Starting Expo for web...
+call npm run web

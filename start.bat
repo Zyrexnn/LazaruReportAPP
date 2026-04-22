@@ -1,0 +1,3 @@
+@echo off
+echo Starting Expo development server...
+call npm start

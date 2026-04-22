@@ -1,50 +1,66 @@
-# Welcome to your Expo app 👋
+# Lazarus Report App
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+A minimalist news and market intelligence app built with Expo and React Native. Features a clean, zen-inspired design similar to iOS apps.
 
-## Get started
+## Features
 
-1. Install dependencies
+- 📰 Real-time news aggregation from multiple sources
+- 📈 Live market data for crypto and stocks with charts
+- 🔖 Offline bookmarks
+- 🌓 Dark/Light mode
+- 📱 Cross-platform (iOS, Android, Web)
+- ⚡ Fast and responsive
 
-   ```bash
-   npm install
-   ```
-
-2. Start the app
-
-   ```bash
-   npx expo start
-   ```
-
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
+## Quick Start
 
 ```bash
-npm run reset-project
+# Install dependencies
+npm install
+
+# Start the app
+npm start
+
+# Or run on specific platform
+npm run ios
+npm run android
+npm run web
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+The app works immediately with mock data. For real-time data, see [API_SETUP.md](./API_SETUP.md).
 
-## Learn more
+## Tech Stack
 
-To learn more about developing your project with Expo, look at the following resources:
+- Expo 54
+- React Native
+- TypeScript
+- Zustand (state management)
+- TanStack Query (data fetching)
+- Expo Router (navigation)
+- SQLite (offline storage)
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+## Design Philosophy
 
-## Join the community
+Clean, minimalist design inspired by iOS and Japanese zen aesthetics:
+- Simple typography with SF Pro system fonts
+- Generous whitespace
+- Subtle animations
+- Focus on content
+- Intuitive navigation
 
-Join our community of developers creating universal apps.
+## Project Structure
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+```
+app/              # Expo Router pages
+  (tabs)/         # Tab navigation screens
+  news/           # News detail screen
+src/
+  components/     # Reusable components
+  services/       # API and database services
+  store/          # Zustand stores
+  types/          # TypeScript types
+constants/        # Theme and constants
+```
+
+## License
+
+MIT
