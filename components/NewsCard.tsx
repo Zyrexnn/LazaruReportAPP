@@ -1,1 +1,1 @@
-export { NewsCard } from '@/src/components/NewsCard';
+export { NewsCard, NewsCardComponent } from '@/src/components/NewsCard';

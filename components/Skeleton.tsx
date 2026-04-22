@@ -1,10 +1,12 @@
+import { useThemeColors } from '@/hooks/use-color-scheme';
+import { useEffect, useRef } from 'react';
 import type { ViewStyle } from 'react-native';
-import { StyleSheet, View } from 'react-native';
+import { Animated, StyleSheet, View } from 'react-native';
 
 export function SkeletonBlock({
   width = '100%',
   height = 16,
-  radius = 999,
+  radius = 12,
   style,
 }: {
   width?: number | `${number}%` | '100%';
@@ -12,11 +14,40 @@ export function SkeletonBlock({
   radius?: number;
   style?: ViewStyle;
 }) {
-  return <View style={[styles.block, { width, height, borderRadius: radius }, style]} />;
-}
+  const colors = useThemeColors();
+  const opacity = useRef(new Animated.Value(0.3)).current;
 
-const styles = StyleSheet.create({
-  block: {
-    backgroundColor: '#EEF2F7',
-  },
-});
+  useEffect(() => {
+    const animation = Animated.loop(
+      Animated.sequence([
+        Animated.timing(opacity, {
+          toValue: 0.7,
+          duration: 800,
+          useNativeDriver: true,
+        }),
+        Animated.timing(opacity, {
+          toValue: 0.3,
+          duration: 800,
+          useNativeDriver: true,
+        }),
+      ])
+    );
+    animation.start();
+    return () => animation.stop();
+  }, [opacity]);
+
+  return (
+    <Animated.View
+      style={[
+        {
+          width,
+          height,
+          borderRadius: radius,
+          backgroundColor: colors.skeleton,
+          opacity,
+        },
+        style,
+      ]}
+    />
+  );
+}

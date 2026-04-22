@@ -1,5 +1,5 @@
-import { Colors } from '@/constants/theme';
-import { useColorScheme } from '@/hooks/use-color-scheme';
+import { BorderWidth, Radius, Shadows, Spacing, Typography } from '@/constants/theme';
+import { useThemeColors } from '@/hooks/use-color-scheme';
 import type { NewsArticle } from '@/src/types/news';
 import { Image } from 'expo-image';
 import { Bookmark, BookmarkCheck, Clock3 } from 'lucide-react-native';
@@ -15,7 +15,19 @@ type NewsCardProps = {
   featured?: boolean;
 };
 
-const CARD_RADIUS = 12;
+const FALLBACK_IMAGE =
+  'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?q=80&w=1400&auto=format&fit=crop';
+
+function timeAgo(dateStr: string): string {
+  const now = Date.now();
+  const diff = now - new Date(dateStr).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 60) return `${mins}m ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs}h ago`;
+  const days = Math.floor(hrs / 24);
+  return `${days}d ago`;
+}
 
 export function NewsCardComponent({
   article,
@@ -25,21 +37,24 @@ export function NewsCardComponent({
   compact = false,
   featured = false,
 }: NewsCardProps) {
-  const colorScheme = useColorScheme() ?? 'light';
-  const colors = Colors[colorScheme];
+  const colors = useThemeColors();
 
+  // ── FEATURED CARD (Full-width bento hero) ───────────────────
   if (featured) {
     return (
-      <Pressable 
-        onPress={onPress} 
+      <Pressable
+        onPress={onPress}
         style={({ pressed }) => [
-          styles.featuredCard, 
-          { backgroundColor: colors.surface },
+          styles.featuredCard,
+          {
+            backgroundColor: colors.cardBg,
+            borderColor: colors.borderStrong,
+          },
           pressed && styles.cardPressed,
         ]}
       >
         <Image
-          source={article.imageUrl || 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?q=80&w=1400&auto=format&fit=crop'}
+          source={article.imageUrl || FALLBACK_IMAGE}
           contentFit="cover"
           cachePolicy="memory-disk"
           style={styles.featuredImage}
@@ -47,21 +62,28 @@ export function NewsCardComponent({
 
         <View style={styles.featuredContent}>
           <View style={styles.topRow}>
-            <View style={[styles.sourceBadge, { backgroundColor: colors.accent }]}>
-              <Text style={styles.sourceBadgeText}>{article.source}</Text>
+            <View style={[styles.sourceBadge, { backgroundColor: colors.badge }]}>
+              <Text style={[styles.sourceBadgeText, { color: colors.badgeText }]}>
+                {article.source}
+              </Text>
             </View>
             {onToggleBookmark ? (
               <Pressable
                 hitSlop={12}
-                onPress={(event) => {
-                  event.stopPropagation();
+                onPress={(e) => {
+                  e.stopPropagation();
                   onToggleBookmark();
                 }}
-                style={[styles.bookmarkCircle, { backgroundColor: colors.background }]}>
-                {isBookmarked ? 
-                  <BookmarkCheck size={18} color={colors.accent} strokeWidth={2} /> : 
-                  <Bookmark size={18} color={colors.icon} strokeWidth={2} />
-                }
+                style={[
+                  styles.bookmarkCircle,
+                  { backgroundColor: colors.surface, borderColor: colors.border },
+                ]}
+              >
+                {isBookmarked ? (
+                  <BookmarkCheck size={16} color={colors.accent} strokeWidth={2.5} />
+                ) : (
+                  <Bookmark size={16} color={colors.icon} strokeWidth={2} />
+                )}
               </Pressable>
             ) : null}
           </View>
@@ -71,9 +93,9 @@ export function NewsCardComponent({
           </Text>
 
           <View style={styles.metaRow}>
-            <Clock3 size={12} color={colors.secondary} strokeWidth={2} />
-            <Text style={[styles.metaText, { color: colors.secondary }]}>
-              {new Date(article.publishedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+            <Clock3 size={11} color={colors.textSecondary} strokeWidth={2.5} />
+            <Text style={[styles.metaText, { color: colors.textSecondary }]}>
+              {timeAgo(article.publishedAt)}
             </Text>
           </View>
         </View>
@@ -81,39 +103,52 @@ export function NewsCardComponent({
     );
   }
 
+  // ── COMPACT CARD (Horizontal scroll tile) ───────────────────
   if (compact) {
     return (
-      <Pressable 
-        onPress={onPress} 
+      <Pressable
+        onPress={onPress}
         style={({ pressed }) => [
-          styles.compactCard, 
-          { backgroundColor: colors.surface, borderColor: colors.border },
+          styles.compactCard,
+          {
+            backgroundColor: colors.cardBg,
+            borderColor: colors.cardBorder,
+          },
           pressed && styles.cardPressed,
         ]}
       >
         <Image
-          source={article.imageUrl || 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?q=80&w=1400&auto=format&fit=crop'}
+          source={article.imageUrl || FALLBACK_IMAGE}
           contentFit="cover"
           cachePolicy="memory-disk"
           style={styles.compactImage}
         />
         <View style={styles.compactContent}>
-          <Text style={[styles.source, { color: colors.accent }]}>{article.source}</Text>
+          <Text style={[styles.compactSource, { color: colors.accent }]}>
+            {article.source}
+          </Text>
           <Text numberOfLines={2} style={[styles.compactTitle, { color: colors.text }]}>
             {article.title}
+          </Text>
+          <Text style={[styles.compactMeta, { color: colors.textSecondary }]}>
+            {timeAgo(article.publishedAt)}
           </Text>
         </View>
       </Pressable>
     );
   }
 
+  // ── DEFAULT CARD (List item — bento tile) ───────────────────
   return (
-    <Pressable 
-      onPress={onPress} 
+    <Pressable
+      onPress={onPress}
       style={({ pressed }) => [
-        styles.card, 
-        { backgroundColor: colors.surface, borderColor: colors.border },
-        pressed && styles.cardPressed, 
+        styles.card,
+        {
+          backgroundColor: colors.cardBg,
+          borderColor: colors.cardBorder,
+        },
+        pressed && styles.cardPressed,
       ]}
     >
       <View style={styles.cardContent}>
@@ -123,38 +158,39 @@ export function NewsCardComponent({
             {onToggleBookmark && (
               <Pressable
                 hitSlop={12}
-                onPress={(event) => {
-                  event.stopPropagation();
+                onPress={(e) => {
+                  e.stopPropagation();
                   onToggleBookmark();
                 }}
               >
-                {isBookmarked ? 
-                  <BookmarkCheck size={16} color={colors.accent} strokeWidth={2} /> : 
+                {isBookmarked ? (
+                  <BookmarkCheck size={16} color={colors.accent} strokeWidth={2.5} />
+                ) : (
                   <Bookmark size={16} color={colors.icon} strokeWidth={2} />
-                }
+                )}
               </Pressable>
             )}
           </View>
-          
+
           <Text numberOfLines={2} style={[styles.title, { color: colors.text }]}>
             {article.title}
           </Text>
 
           <View style={styles.metaRow}>
-            <Text style={[styles.metaText, { color: colors.secondary }]}>
-              {new Date(article.publishedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+            <Text style={[styles.metaText, { color: colors.textSecondary }]}>
+              {timeAgo(article.publishedAt)}
             </Text>
           </View>
         </View>
 
-        {article.imageUrl && (
+        {article.imageUrl ? (
           <Image
             source={article.imageUrl}
             contentFit="cover"
             cachePolicy="memory-disk"
             style={styles.thumbnail}
           />
-        )}
+        ) : null}
       </View>
     </Pressable>
   );
@@ -163,20 +199,21 @@ export function NewsCardComponent({
 export const NewsCard = memo(NewsCardComponent);
 
 const styles = StyleSheet.create({
+  // ── Default Card ───────────────────────────────────────────
   card: {
-    marginBottom: 12,
-    borderRadius: 16,
-    borderWidth: 1,
+    marginBottom: Spacing.md,
+    borderRadius: Radius.lg,
+    borderWidth: BorderWidth.normal,
     overflow: 'hidden',
   },
   cardPressed: {
-    opacity: 0.8,
-    transform: [{ scale: 0.98 }],
+    opacity: 0.85,
+    transform: [{ scale: 0.985 }],
   },
   cardContent: {
     flexDirection: 'row',
-    padding: 12,
-    gap: 12,
+    padding: Spacing.lg,
+    gap: Spacing.md,
   },
   textContent: {
     flex: 1,
@@ -186,99 +223,99 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 4,
+    marginBottom: Spacing.xs,
   },
   thumbnail: {
-    width: 90,
-    height: 90,
-    borderRadius: 12,
+    width: 84,
+    height: 84,
+    borderRadius: Radius.md,
   },
+
+  // ── Featured Card ──────────────────────────────────────────
   featuredCard: {
-    borderRadius: 24,
+    borderRadius: Radius.xl,
+    borderWidth: BorderWidth.thick,
     overflow: 'hidden',
-    marginBottom: 24,
-    elevation: 4,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 12,
+    marginBottom: Spacing.lg,
+    ...Shadows.md,
   },
   featuredImage: {
     width: '100%',
-    height: 240,
+    height: 220,
   },
   featuredContent: {
-    padding: 20,
-    gap: 8,
-  },
-  sourceBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 6,
-  },
-  sourceBadgeText: {
-    color: '#FFFFFF',
-    fontSize: 10,
-    fontWeight: '900',
-    textTransform: 'uppercase',
-  },
-  bookmarkCircle: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    justifyContent: 'center',
-    alignItems: 'center',
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-  },
-  featuredTitle: {
-    fontSize: 24,
-    lineHeight: 30,
-    fontWeight: '800',
-    letterSpacing: -0.6,
-  },
-  compactCard: {
-    width: 180,
-    marginRight: 16,
-    borderRadius: 20,
-    overflow: 'hidden',
-    borderWidth: 1,
-  },
-  compactImage: {
-    width: '100%',
-    height: 110,
-  },
-  compactContent: {
-    padding: 12,
-    gap: 4,
-  },
-  compactTitle: {
-    fontSize: 15,
-    lineHeight: 19,
-    fontWeight: '700',
-    letterSpacing: -0.3,
+    padding: Spacing.xl,
+    gap: Spacing.sm,
   },
   topRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 4,
+    marginBottom: Spacing.xs,
   },
+  sourceBadge: {
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: Spacing.xs,
+    borderRadius: Radius.xs,
+  },
+  sourceBadgeText: {
+    ...Typography.overline,
+    fontSize: 9,
+  },
+  bookmarkCircle: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    borderWidth: BorderWidth.thin,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  featuredTitle: {
+    ...Typography.h1,
+    fontSize: 22,
+    lineHeight: 28,
+  },
+
+  // ── Compact Card ───────────────────────────────────────────
+  compactCard: {
+    width: 170,
+    marginRight: Spacing.md,
+    borderRadius: Radius.lg,
+    overflow: 'hidden',
+    borderWidth: BorderWidth.normal,
+  },
+  compactImage: {
+    width: '100%',
+    height: 100,
+  },
+  compactContent: {
+    padding: Spacing.md,
+    gap: 3,
+  },
+  compactSource: {
+    ...Typography.overline,
+    fontSize: 9,
+  },
+  compactTitle: {
+    fontSize: 14,
+    lineHeight: 18,
+    fontWeight: '700',
+    letterSpacing: -0.2,
+  },
+  compactMeta: {
+    fontSize: 10,
+    fontWeight: '600',
+    marginTop: 2,
+  },
+
+  // ── Shared ─────────────────────────────────────────────────
   source: {
-    fontSize: 11,
-    fontWeight: '900',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
+    ...Typography.overline,
+    fontSize: 10,
   },
   title: {
-    fontSize: 17,
-    lineHeight: 23,
-    fontWeight: '700',
-    letterSpacing: -0.4,
-    marginBottom: 8,
+    ...Typography.h3,
+    marginBottom: Spacing.sm,
   },
   metaRow: {
     flexDirection: 'row',
@@ -286,7 +323,7 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   metaText: {
+    ...Typography.caption,
     fontSize: 11,
-    fontWeight: '600',
   },
 });
