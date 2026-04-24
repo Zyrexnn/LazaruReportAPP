@@ -1,44 +1,3 @@
-import { BorderWidth, Radius, Shadows, Spacing, Typography } from '@/constants/theme';
-import { useThemeColors } from '@/hooks/use-color-scheme';
-import type { NewsArticle } from '@/src/types/news';
-import { Image } from 'expo-image';
-import { Bookmark, BookmarkCheck, Clock3 } from 'lucide-react-native';
-import { memo } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
-
-type NewsCardProps = {
-  article: NewsArticle;
-  isBookmarked?: boolean;
-  onPress: () => void;
-  onToggleBookmark?: () => void;
-  compact?: boolean;
-  featured?: boolean;
-};
-
-const FALLBACK_IMAGE =
-  'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?q=80&w=1400&auto=format&fit=crop';
-
-function timeAgo(dateStr: string): string {
-  const now = Date.now();
-  const diff = now - new Date(dateStr).getTime();
-  const mins = Math.floor(diff / 60000);
-  if (mins < 60) return `${mins}m ago`;
-  const hrs = Math.floor(mins / 60);
-  if (hrs < 24) return `${hrs}h ago`;
-  const days = Math.floor(hrs / 24);
-  return `${days}d ago`;
-}
-
-export function NewsCardComponent({
-  article,
-  isBookmarked = false,
-  onPress,
-  onToggleBookmark,
-  compact = false,
-  featured = false,
-}: NewsCardProps) {
-  const colors = useThemeColors();
-
   // ── FEATURED CARD (Full-width bento hero) ───────────────────
   if (featured) {
     return (
@@ -50,21 +9,30 @@ export function NewsCardComponent({
             backgroundColor: colors.cardBg,
             borderColor: colors.borderStrong,
           },
+          !pressed && Shadows.md,
           pressed && styles.cardPressed,
         ]}
       >
-        <Image
-          source={article.imageUrl || FALLBACK_IMAGE}
-          contentFit="cover"
-          cachePolicy="memory-disk"
-          style={styles.featuredImage}
-        />
+        <View style={[styles.imageContainer, { borderBottomWidth: BorderWidth.normal }]}>
+          <Image
+            source={article.imageUrl || FALLBACK_IMAGE}
+            contentFit="cover"
+            cachePolicy="memory-disk"
+            style={styles.featuredImage}
+          />
+          <View style={[styles.sourceBadge, { backgroundColor: colors.badge, borderLeftWidth: BorderWidth.normal, borderBottomWidth: BorderWidth.normal }]}>
+            <Text style={[styles.sourceBadgeText, { color: colors.badgeText }]}>
+              {article.source}
+            </Text>
+          </View>
+        </View>
 
         <View style={styles.featuredContent}>
           <View style={styles.topRow}>
-            <View style={[styles.sourceBadge, { backgroundColor: colors.badge }]}>
-              <Text style={[styles.sourceBadgeText, { color: colors.badgeText }]}>
-                {article.source}
+            <View style={styles.metaRow}>
+              <Clock3 size={12} color={colors.textSecondary} strokeWidth={3} />
+              <Text style={[styles.metaText, { color: colors.textSecondary }]}>
+                {timeAgo(article.publishedAt)}
               </Text>
             </View>
             {onToggleBookmark ? (
@@ -80,9 +48,9 @@ export function NewsCardComponent({
                 ]}
               >
                 {isBookmarked ? (
-                  <BookmarkCheck size={16} color={colors.accent} strokeWidth={2.5} />
+                  <BookmarkCheck size={18} color={colors.accent} strokeWidth={3} />
                 ) : (
-                  <Bookmark size={16} color={colors.icon} strokeWidth={2} />
+                  <Bookmark size={18} color={colors.text} strokeWidth={2.5} />
                 )}
               </Pressable>
             ) : null}
@@ -91,13 +59,6 @@ export function NewsCardComponent({
           <Text numberOfLines={3} style={[styles.featuredTitle, { color: colors.text }]}>
             {article.title}
           </Text>
-
-          <View style={styles.metaRow}>
-            <Clock3 size={11} color={colors.textSecondary} strokeWidth={2.5} />
-            <Text style={[styles.metaText, { color: colors.textSecondary }]}>
-              {timeAgo(article.publishedAt)}
-            </Text>
-          </View>
         </View>
       </Pressable>
     );
@@ -114,6 +75,7 @@ export function NewsCardComponent({
             backgroundColor: colors.cardBg,
             borderColor: colors.cardBorder,
           },
+          !pressed && Shadows.sm,
           pressed && styles.cardPressed,
         ]}
       >
@@ -123,15 +85,12 @@ export function NewsCardComponent({
           cachePolicy="memory-disk"
           style={styles.compactImage}
         />
-        <View style={styles.compactContent}>
+        <View style={[styles.compactContent, { borderTopWidth: BorderWidth.thin }]}>
           <Text style={[styles.compactSource, { color: colors.accent }]}>
             {article.source}
           </Text>
           <Text numberOfLines={2} style={[styles.compactTitle, { color: colors.text }]}>
             {article.title}
-          </Text>
-          <Text style={[styles.compactMeta, { color: colors.textSecondary }]}>
-            {timeAgo(article.publishedAt)}
           </Text>
         </View>
       </Pressable>
@@ -148,6 +107,7 @@ export function NewsCardComponent({
           backgroundColor: colors.cardBg,
           borderColor: colors.cardBorder,
         },
+        !pressed && Shadows.sm,
         pressed && styles.cardPressed,
       ]}
     >
@@ -164,9 +124,9 @@ export function NewsCardComponent({
                 }}
               >
                 {isBookmarked ? (
-                  <BookmarkCheck size={16} color={colors.accent} strokeWidth={2.5} />
+                  <BookmarkCheck size={18} color={colors.accent} strokeWidth={3} />
                 ) : (
-                  <Bookmark size={16} color={colors.icon} strokeWidth={2} />
+                  <Bookmark size={18} color={colors.text} strokeWidth={2.5} />
                 )}
               </Pressable>
             )}
@@ -184,12 +144,14 @@ export function NewsCardComponent({
         </View>
 
         {article.imageUrl ? (
-          <Image
-            source={article.imageUrl}
-            contentFit="cover"
-            cachePolicy="memory-disk"
-            style={styles.thumbnail}
-          />
+          <View style={[styles.thumbnailContainer, { borderColor: colors.border, borderWidth: BorderWidth.thin }]}>
+            <Image
+              source={article.imageUrl}
+              contentFit="cover"
+              cachePolicy="memory-disk"
+              style={styles.thumbnail}
+            />
+          </View>
         ) : null}
       </View>
     </Pressable>
@@ -201,14 +163,13 @@ export const NewsCard = memo(NewsCardComponent);
 const styles = StyleSheet.create({
   // ── Default Card ───────────────────────────────────────────
   card: {
-    marginBottom: Spacing.md,
-    borderRadius: Radius.lg,
+    marginBottom: Spacing.lg,
+    borderRadius: Radius.md,
     borderWidth: BorderWidth.normal,
-    overflow: 'hidden',
+    overflow: 'visible', // For shadows
   },
   cardPressed: {
-    opacity: 0.85,
-    transform: [{ scale: 0.985 }],
+    transform: [{ translateX: 2 }, { translateY: 2 }],
   },
   cardContent: {
     flexDirection: 'row',
@@ -225,23 +186,32 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: Spacing.xs,
   },
+  thumbnailContainer: {
+    borderRadius: Radius.sm,
+    overflow: 'hidden',
+  },
   thumbnail: {
-    width: 84,
-    height: 84,
-    borderRadius: Radius.md,
+    width: 80,
+    height: 80,
   },
 
   // ── Featured Card ──────────────────────────────────────────
   featuredCard: {
-    borderRadius: Radius.xl,
+    borderRadius: Radius.lg,
     borderWidth: BorderWidth.thick,
+    overflow: 'visible', // For shadows
+    marginBottom: Spacing.xl,
+  },
+  imageContainer: {
+    position: 'relative',
+    height: 220,
     overflow: 'hidden',
-    marginBottom: Spacing.lg,
-    ...Shadows.md,
+    borderTopLeftRadius: Radius.lg - BorderWidth.thick,
+    borderTopRightRadius: Radius.lg - BorderWidth.thick,
   },
   featuredImage: {
     width: '100%',
-    height: 220,
+    height: '100%',
   },
   featuredContent: {
     padding: Spacing.xl,
@@ -251,79 +221,84 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: Spacing.xs,
+    marginBottom: Spacing.sm,
   },
   sourceBadge: {
-    paddingHorizontal: Spacing.sm,
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.xs,
-    borderRadius: Radius.xs,
   },
   sourceBadgeText: {
     ...Typography.overline,
-    fontSize: 9,
+    fontSize: 10,
+    fontWeight: '900',
   },
   bookmarkCircle: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    borderWidth: BorderWidth.thin,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    borderWidth: BorderWidth.normal,
     justifyContent: 'center',
     alignItems: 'center',
   },
   featuredTitle: {
     ...Typography.h1,
-    fontSize: 22,
-    lineHeight: 28,
+    fontSize: 24,
+    lineHeight: 30,
   },
 
   // ── Compact Card ───────────────────────────────────────────
   compactCard: {
-    width: 170,
-    marginRight: Spacing.md,
-    borderRadius: Radius.lg,
-    overflow: 'hidden',
+    width: 200,
+    marginRight: Spacing.xl,
+    borderRadius: Radius.md,
+    overflow: 'visible', // For shadows
     borderWidth: BorderWidth.normal,
   },
   compactImage: {
     width: '100%',
-    height: 100,
+    height: 110,
+    borderTopLeftRadius: Radius.md - BorderWidth.normal,
+    borderTopRightRadius: Radius.md - BorderWidth.normal,
   },
   compactContent: {
     padding: Spacing.md,
-    gap: 3,
+    gap: 4,
   },
   compactSource: {
     ...Typography.overline,
     fontSize: 9,
+    fontWeight: '900',
   },
   compactTitle: {
-    fontSize: 14,
-    lineHeight: 18,
-    fontWeight: '700',
-    letterSpacing: -0.2,
-  },
-  compactMeta: {
-    fontSize: 10,
-    fontWeight: '600',
-    marginTop: 2,
+    fontSize: 15,
+    lineHeight: 19,
+    fontWeight: '800',
+    letterSpacing: -0.3,
   },
 
   // ── Shared ─────────────────────────────────────────────────
   source: {
     ...Typography.overline,
-    fontSize: 10,
+    fontSize: 11,
+    fontWeight: '900',
   },
   title: {
     ...Typography.h3,
-    marginBottom: Spacing.sm,
+    fontSize: 18,
+    lineHeight: 22,
+    fontWeight: '800',
   },
   metaRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
+    gap: 6,
   },
   metaText: {
     ...Typography.caption,
-    fontSize: 11,
+    fontSize: 12,
+    fontWeight: '700',
   },
 });

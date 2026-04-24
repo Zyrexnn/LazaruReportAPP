@@ -59,38 +59,38 @@ export default function NewsDetailScreen() {
         {/* Floating Controls */}
         <View style={styles.overlayControls}>
           <Pressable
-            style={[styles.iconButton, { backgroundColor: colors.surface, borderColor: colors.border }]}
+            style={[styles.iconButton, { backgroundColor: colors.surface, borderColor: '#000' }]}
             onPress={() => router.back()}
           >
-            <ChevronLeft size={20} color={colors.text} strokeWidth={2} />
+            <ChevronLeft size={22} color={colors.text} strokeWidth={2.5} />
           </Pressable>
           <View style={styles.controlsRight}>
             <Pressable
-              style={[styles.iconButton, { backgroundColor: colors.surface, borderColor: colors.border }]}
+              style={[styles.iconButton, { backgroundColor: colors.surface, borderColor: '#000' }]}
               onPress={() => setDistractionFree((v) => !v)}
             >
               {distractionFree ? (
-                <Eye size={18} color={colors.text} strokeWidth={2} />
+                <Eye size={18} color={colors.text} strokeWidth={2.5} />
               ) : (
-                <EyeOff size={18} color={colors.text} strokeWidth={2} />
+                <EyeOff size={18} color={colors.text} strokeWidth={2.5} />
               )}
             </Pressable>
             <Pressable
-              style={[styles.iconButton, { backgroundColor: colors.accent, borderColor: colors.accent }]}
+              style={[styles.iconButton, { backgroundColor: colors.accent, borderColor: '#000' }]}
               onPress={openExternal}
             >
-              <ExternalLink size={18} color={colors.badgeText} strokeWidth={2} />
+              <ExternalLink size={18} color={'#FFF'} strokeWidth={2.5} />
             </Pressable>
           </View>
         </View>
 
         {/* Article Content Sheet */}
-        <View style={[styles.articleSheet, { backgroundColor: colors.background }]}>
+        <View style={[styles.articleSheet, { backgroundColor: colors.background, borderTopWidth: BorderWidth.thick, borderTopColor: '#000' }]}>
           {!distractionFree && (
             <>
-              <View style={[styles.sourceBadge, { backgroundColor: colors.accentSoft }]}>
-                <Text style={[styles.sourceText, { color: colors.accent }]}>
-                  {selectedArticle.source}
+              <View style={[styles.sourceBadge, { backgroundColor: '#FFE600', borderColor: '#000', borderWidth: BorderWidth.normal }, Shadows.sm]}>
+                <Text style={[styles.sourceText, { color: '#000' }]}>
+                  {selectedArticle.source.toUpperCase()}
                 </Text>
               </View>
               <Text style={[styles.title, { color: colors.text }]}>{selectedArticle.title}</Text>

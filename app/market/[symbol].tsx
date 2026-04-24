@@ -17,8 +17,8 @@ type ChartType = 'line' | 'candle' | 'area';
 function StatCard({ label, value, color }: { label: string; value: string; color?: string }) {
   const colors = useThemeColors();
   return (
-    <View style={[styles.statCard, { backgroundColor: colors.cardBg, borderColor: colors.cardBorder }]}>
-      <Text style={[styles.statLabel, { color: colors.textSecondary }]}>{label}</Text>
+    <View style={[styles.statCard, { backgroundColor: colors.cardBg, borderColor: colors.cardBorder }, Shadows.sm]}>
+      <Text style={[styles.statLabel, { color: '#000' }]}>{label}</Text>
       <Text style={[styles.statValue, { color: color || colors.text }]}>{value}</Text>
     </View>
   );
@@ -257,20 +257,20 @@ export default function MarketDetailScreen() {
       </Modal>
 
       {/* ── Header ─────────────────────────────────────────── */}
-      <View style={[styles.header, { borderBottomColor: colors.border }]}>
-        <Pressable onPress={() => router.back()} style={[styles.backButton, { borderColor: colors.border }]}>
-          <ChevronLeft size={22} color={colors.text} strokeWidth={2} />
+      <View style={[styles.header, { borderBottomColor: '#000', borderBottomWidth: BorderWidth.thick }]}>
+        <Pressable onPress={() => router.back()} style={[styles.backButton, { borderColor: '#000' }, Shadows.sm]}>
+          <ChevronLeft size={22} color={colors.text} strokeWidth={2.5} />
         </Pressable>
 
         <View style={styles.headerCenter}>
-          <Text style={[styles.headerSymbol, { color: colors.text }]}>{detail.symbol}</Text>
+          <Text style={[styles.headerSymbol, { color: colors.text }]}>{detail.symbol.toUpperCase()}</Text>
           <Text style={[styles.headerType, { color: colors.textSecondary }]}>
-            {detail.type === 'crypto' ? 'Cryptocurrency' : 'Stock'}
+            {detail.type.toUpperCase()}
           </Text>
         </View>
 
-        <Pressable onPress={() => setIsSwitcherOpen(true)} style={[styles.moreButton, { borderColor: colors.border }]}>
-          <Search size={20} color={colors.text} />
+        <Pressable onPress={() => setIsSwitcherOpen(true)} style={[styles.moreButton, { borderColor: '#000' }, Shadows.sm]}>
+          <Search size={20} color={colors.text} strokeWidth={2.5} />
         </Pressable>
       </View>
 

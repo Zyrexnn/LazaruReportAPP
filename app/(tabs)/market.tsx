@@ -277,118 +277,157 @@ const styles = StyleSheet.create({
   header: {
     paddingHorizontal: BentoConfig.paddingH,
     paddingTop: 60,
-    paddingBottom: Spacing.lg,
+    paddingBottom: Spacing.md,
+    borderBottomWidth: BorderWidth.thick,
+    borderBottomColor: '#000',
   },
   headerTitle: {
     ...Typography.display,
-    fontSize: 32,
+    fontSize: 42,
+    lineHeight: 46,
   },
-  sentimentRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    marginTop: 4,
-  },
-  sentimentDot: {
-    width: 7,
-    height: 7,
-    borderRadius: 4,
+  sentimentBox: {
+    marginTop: 8,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: 4,
+    borderRadius: Radius.xs,
+    borderWidth: BorderWidth.normal,
+    alignSelf: 'flex-start',
+    ...Shadows.sm,
   },
   sentimentText: {
     ...Typography.caption,
-    textTransform: 'uppercase',
-    letterSpacing: 1,
+    fontWeight: '900',
+    letterSpacing: 0.5,
   },
 
-  // ── Bento Stats ────────────────────────────────────────────
+  // ── Scroll Content ─────────────────────────────────────────
+  scrollContent: {
+    paddingBottom: 120,
+  },
+
+  // ── Bento Grid ─────────────────────────────────────────────
+  bentoGrid: {
+    padding: BentoConfig.paddingH,
+    gap: BentoConfig.gap,
+  },
   bentoRow: {
     flexDirection: 'row',
-    paddingHorizontal: BentoConfig.paddingH,
     gap: BentoConfig.gap,
-    marginBottom: Spacing.xl,
+  },
+  bentoStack: {
+    flex: 1,
+    gap: BentoConfig.gap,
   },
   statBento: {
     flex: 1,
     padding: Spacing.lg,
-    borderRadius: Radius.lg,
+    borderRadius: Radius.md,
     borderWidth: BorderWidth.normal,
-    gap: 4,
+    justifyContent: 'center',
   },
   statLabel: {
     ...Typography.overline,
+    fontSize: 10,
+    fontWeight: '900',
   },
   statValue: {
     ...Typography.h2,
-    fontSize: 22,
+    fontSize: 24,
+    fontWeight: '900',
+    marginTop: 2,
   },
   statSub: {
     ...Typography.caption,
+    fontWeight: '800',
     marginTop: 2,
   },
+  miniBento: {
+    flex: 1,
+    padding: Spacing.md,
+    borderRadius: Radius.sm,
+    borderWidth: BorderWidth.normal,
+    justifyContent: 'center',
+    ...Shadows.sm,
+  },
+  miniLabel: {
+    ...Typography.overline,
+    fontSize: 9,
+    fontWeight: '900',
+    color: '#000',
+  },
+  miniValue: {
+    fontSize: 14,
+    fontWeight: '900',
+    color: '#000',
+  },
 
-  // ── Search ─────────────────────────────────────────────────
-  searchSection: {
+  // ── Controls ───────────────────────────────────────────────
+  controlsSection: {
     paddingHorizontal: BentoConfig.paddingH,
     marginBottom: Spacing.lg,
+    gap: Spacing.md,
   },
   searchBox: {
     flexDirection: 'row',
     alignItems: 'center',
-    height: 44,
+    height: 48,
     borderRadius: Radius.md,
     borderWidth: BorderWidth.normal,
     paddingHorizontal: Spacing.md,
     gap: Spacing.sm,
+    ...Shadows.sm,
   },
   searchInput: {
     flex: 1,
-    fontSize: 15,
-    fontWeight: '500',
+    fontSize: 16,
+    fontWeight: '700',
   },
-
-  // ── Tabs ───────────────────────────────────────────────────
-  tabContainer: {
+  tabRow: {
     flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: BentoConfig.paddingH,
-    marginBottom: Spacing.lg,
     gap: Spacing.sm,
   },
   tabBtn: {
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.sm,
-    borderRadius: Radius.sm,
+    flex: 1,
+    height: 44,
+    borderRadius: Radius.xs,
     borderWidth: BorderWidth.normal,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   tabBtnText: {
     fontSize: 13,
-    fontWeight: '800',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-  assetCount: {
-    ...Typography.caption,
+    fontWeight: '900',
+    letterSpacing: 1,
   },
 
   // ── List ───────────────────────────────────────────────────
   listHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    paddingHorizontal: BentoConfig.paddingH,
-    marginBottom: Spacing.md,
+    paddingHorizontal: BentoConfig.paddingH + Spacing.sm,
+    marginBottom: Spacing.sm,
     alignItems: 'center',
   },
   listLabel: {
     ...Typography.overline,
+    fontSize: 11,
+    fontWeight: '900',
     flex: 1,
-    opacity: 0.6,
+  },
+  listContainer: {
+    paddingHorizontal: BentoConfig.paddingH,
+    gap: Spacing.md,
   },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: Spacing.lg,
-    paddingHorizontal: BentoConfig.paddingH,
-    borderBottomWidth: 1,
+    padding: Spacing.lg,
+    borderRadius: Radius.md,
+    borderWidth: BorderWidth.normal,
+  },
+  rowPressed: {
+    transform: [{ translateX: 2 }, { translateY: 2 }],
   },
   leftSection: {
     flex: 1.5,
@@ -397,19 +436,20 @@ const styles = StyleSheet.create({
     gap: Spacing.md,
   },
   symbolIcon: {
-    width: 36,
-    height: 36,
+    width: 40,
+    height: 40,
     borderRadius: Radius.sm,
-    borderWidth: BorderWidth.thin,
+    borderWidth: BorderWidth.normal,
     justifyContent: 'center',
     alignItems: 'center',
+    ...Shadows.sm,
   },
   symbolIconText: {
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: '900',
   },
   symbolInfo: {
-    gap: 1,
+    gap: 0,
   },
   middleSection: {
     flex: 1,
@@ -417,31 +457,34 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   symbol: {
-    fontSize: 16,
-    fontWeight: '700',
-    letterSpacing: -0.2,
+    fontSize: 18,
+    fontWeight: '900',
+    letterSpacing: -0.5,
   },
   name: {
     fontSize: 11,
-    fontWeight: '500',
+    fontWeight: '700',
+    textTransform: 'uppercase',
   },
   rightSection: {
     flex: 1.5,
     alignItems: 'flex-end',
-    gap: 4,
+    gap: 6,
   },
   price: {
     ...Typography.mono,
-    fontSize: 16,
+    fontSize: 17,
+    fontWeight: '900',
   },
   changeBadge: {
     paddingHorizontal: Spacing.sm,
     paddingVertical: 2,
     borderRadius: Radius.xs,
+    borderWidth: BorderWidth.thin,
   },
   changeText: {
-    fontSize: 12,
-    fontWeight: '800',
+    fontSize: 11,
+    fontWeight: '900',
   },
   emptyContainer: {
     paddingVertical: 80,
@@ -449,5 +492,6 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     ...Typography.body,
+    fontWeight: '700',
   },
 });

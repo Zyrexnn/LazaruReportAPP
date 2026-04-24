@@ -54,6 +54,18 @@ export default function BookmarksScreen() {
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
       <StatusBar style={isDark ? 'light' : 'dark'} />
+      
+      <View style={styles.header}>
+        <Text style={[styles.title, { color: colors.text }]}>SAVED</Text>
+        {bookmarks.length > 0 && (
+          <View style={[styles.countBadge, { backgroundColor: '#FFE600', borderColor: '#000', borderWidth: BorderWidth.normal }]}>
+            <Text style={[styles.countText, { color: '#000' }]}>
+              {bookmarks.length} {bookmarks.length === 1 ? 'STORY' : 'STORIES'}
+            </Text>
+          </View>
+        )}
+      </View>
+
       <FlashList
         data={bookmarks}
         keyExtractor={(item) => item.id}
@@ -66,26 +78,14 @@ export default function BookmarksScreen() {
           />
         }
         contentContainerStyle={styles.content}
-        ListHeaderComponent={
-          <View style={styles.header}>
-            <Text style={[styles.title, { color: colors.text }]}>Saved</Text>
-            {bookmarks.length > 0 && (
-              <View style={[styles.countBadge, { backgroundColor: colors.accentSoft }]}>
-                <Text style={[styles.countText, { color: colors.accent }]}>
-                  {bookmarks.length} {bookmarks.length === 1 ? 'article' : 'articles'}
-                </Text>
-              </View>
-            )}
-          </View>
-        }
         ListEmptyComponent={
           <View style={styles.emptyState}>
-            <View style={[styles.emptyIcon, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-              <BookmarkX size={32} color={colors.textSecondary} strokeWidth={1.5} />
+            <View style={[styles.emptyIcon, { backgroundColor: colors.surface, borderColor: '#000' }, Shadows.md]}>
+              <BookmarkX size={40} color={colors.text} strokeWidth={2.5} />
             </View>
-            <Text style={[styles.emptyTitle, { color: colors.text }]}>No bookmarks yet</Text>
+            <Text style={[styles.emptyTitle, { color: colors.text }]}>NOTHING SAVED</Text>
             <Text style={[styles.emptyBody, { color: colors.textSecondary }]}>
-              Tap the bookmark icon on any article to save it here for later reading
+              TAB THE BOOKMARK ICON ON ANY ARTICLE TO SYNC IT HERE.
             </Text>
           </View>
         }
@@ -100,37 +100,41 @@ export default function BookmarksScreen() {
             }}
           />
         )}
-        ListFooterComponent={<View style={{ height: 100 }} />}
+        ListFooterComponent={<View style={{ height: 120 }} />}
       />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  content: {
+  header: {
     paddingHorizontal: BentoConfig.paddingH,
     paddingTop: 60,
-    paddingBottom: 100,
-  },
-  header: {
-    marginBottom: Spacing['2xl'],
+    paddingBottom: Spacing.md,
+    borderBottomWidth: BorderWidth.thick,
+    borderBottomColor: '#000',
   },
   title: {
     ...Typography.display,
-    fontSize: 32,
+    fontSize: 48,
+    lineHeight: 52,
+  },
+  content: {
+    paddingHorizontal: BentoConfig.paddingH,
+    paddingTop: Spacing.lg,
   },
   countBadge: {
     alignSelf: 'flex-start',
     paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.xs,
+    paddingVertical: 4,
     borderRadius: Radius.xs,
     marginTop: Spacing.sm,
+    ...Shadows.sm,
   },
   countText: {
     fontSize: 12,
-    fontWeight: '800',
-    letterSpacing: 0.3,
-    textTransform: 'uppercase',
+    fontWeight: '900',
+    letterSpacing: 0.5,
   },
   emptyState: {
     paddingVertical: 100,
@@ -138,9 +142,9 @@ const styles = StyleSheet.create({
     gap: Spacing.lg,
   },
   emptyIcon: {
-    width: 72,
-    height: 72,
-    borderRadius: Radius.xl,
+    width: 80,
+    height: 80,
+    borderRadius: Radius.md,
     borderWidth: BorderWidth.thick,
     justifyContent: 'center',
     alignItems: 'center',
@@ -148,11 +152,13 @@ const styles = StyleSheet.create({
   },
   emptyTitle: {
     ...Typography.h2,
+    fontWeight: '900',
   },
   emptyBody: {
     ...Typography.body,
     textAlign: 'center',
     maxWidth: '75%',
-    lineHeight: 22,
+    fontWeight: '800',
+    lineHeight: 20,
   },
 });

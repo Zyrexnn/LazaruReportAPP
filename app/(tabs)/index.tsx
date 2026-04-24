@@ -235,7 +235,7 @@ export default function HomeScreen() {
       <FlashList
         data={readLater}
         keyExtractor={(item) => item.id}
-        estimatedItemSize={120}
+        estimatedItemSize={140}
         refreshControl={
           <RefreshControl
             refreshing={newsQuery.isRefetching}
@@ -246,30 +246,48 @@ export default function HomeScreen() {
         contentContainerStyle={styles.content}
         ListHeaderComponent={
           <>
-            {/* Featured Bento Tile */}
-            {featured.length > 0 && (
-              <View style={styles.featuredSection}>
-                <NewsCard
-                  featured
-                  article={featured[0]}
-                  isBookmarked={bookmarkedIds.has(featured[0].id)}
-                  onPress={() => openArticle(featured[0])}
-                  onToggleBookmark={() => toggleBookmark(featured[0])}
-                />
+            {/* Bento Grid Header */}
+            <View style={styles.bentoGrid}>
+              {/* Main Featured Tile (2x2 ish) */}
+              {featured.length > 0 && (
+                <View style={styles.featuredContainer}>
+                  <NewsCard
+                    featured
+                    article={featured[0]}
+                    isBookmarked={bookmarkedIds.has(featured[0].id)}
+                    onPress={() => openArticle(featured[0])}
+                    onToggleBookmark={() => toggleBookmark(featured[0])}
+                  />
+                </View>
+              )}
+
+              {/* Decorative / Stat Tiles */}
+              <View style={styles.bentoRow}>
+                <View style={[styles.miniBento, { backgroundColor: '#FFE600', borderColor: colors.borderStrong }]}>
+                  <Text style={styles.miniBentoLabel}>TRENDING</Text>
+                  <Text style={styles.miniBentoValue}>AI REVOLUTION</Text>
+                </View>
+                <View style={[styles.miniBento, { backgroundColor: colors.accent, borderColor: colors.borderStrong }]}>
+                  <Text style={[styles.miniBentoLabel, { color: '#FFF' }]}>LATEST</Text>
+                  <Text style={[styles.miniBentoValue, { color: '#FFF' }]}>{filteredNews.length} UPDATES</Text>
+                </View>
               </View>
-            )}
+            </View>
 
             {/* Top Stories — Horizontal Bento Row */}
             {topStories.length > 0 && (
               <View style={styles.topStoriesSection}>
                 <View style={styles.sectionHeader}>
-                  <Text style={[styles.sectionTitle, { color: colors.text }]}>Top Stories</Text>
-                  <ChevronRight size={18} color={colors.textSecondary} />
+                  <View style={[styles.sectionTitleBox, { backgroundColor: colors.surfaceElevated, borderColor: colors.borderStrong }]}>
+                    <Text style={[styles.sectionTitle, { color: colors.text }]}>TOP STORIES</Text>
+                  </View>
                 </View>
                 <ScrollView
                   horizontal
                   showsHorizontalScrollIndicator={false}
                   contentContainerStyle={styles.horizontalScrollContent}
+                  snapToInterval={220}
+                  decelerationRate="fast"
                 >
                   {topStories.map((item) => (
                     <NewsCard
@@ -286,9 +304,11 @@ export default function HomeScreen() {
             {/* Read Later Header */}
             {readLater.length > 0 && (
               <View style={styles.sectionHeader}>
-                <Text style={[styles.sectionTitle, { color: colors.text }]}>Latest</Text>
-                <View style={[styles.countBadge, { backgroundColor: colors.accentSoft }]}>
-                  <Text style={[styles.countText, { color: colors.accent }]}>{readLater.length}</Text>
+                 <View style={[styles.sectionTitleBox, { backgroundColor: '#00FF66', borderColor: colors.borderStrong }]}>
+                    <Text style={[styles.sectionTitle, { color: '#000' }]}>LATEST FEED</Text>
+                  </View>
+                <View style={[styles.countBadge, { backgroundColor: colors.surface, borderColor: colors.borderStrong, borderWidth: BorderWidth.normal }]}>
+                  <Text style={[styles.countText, { color: colors.text }]}>{readLater.length}</Text>
                 </View>
               </View>
             )}
@@ -322,6 +342,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: BentoConfig.paddingH,
     paddingTop: 60,
     paddingBottom: Spacing.md,
+    borderBottomWidth: BorderWidth.thick,
+    borderBottomColor: '#000',
   },
   headerTop: {
     flexDirection: 'row',
@@ -331,23 +353,28 @@ const styles = StyleSheet.create({
   },
   dateText: {
     ...Typography.overline,
-    marginBottom: 2,
+    marginBottom: 0,
+    fontWeight: '900',
+    color: '#000',
   },
   mainTitle: {
     ...Typography.display,
+    fontSize: 48,
+    lineHeight: 52,
   },
   headerActions: {
     flexDirection: 'row',
     gap: Spacing.sm,
-    marginTop: 4,
+    marginTop: 8,
   },
   iconBtn: {
-    width: 38,
-    height: 38,
+    width: 44,
+    height: 44,
     borderRadius: Radius.md,
     borderWidth: BorderWidth.normal,
     justifyContent: 'center',
     alignItems: 'center',
+    ...Shadows.sm,
   },
 
   // ── Theme Switcher ─────────────────────────────────────────
@@ -356,75 +383,122 @@ const styles = StyleSheet.create({
     padding: Spacing.sm,
     borderRadius: Radius.lg,
     borderWidth: BorderWidth.normal,
+    ...Shadows.md,
   },
 
   // ── Search ─────────────────────────────────────────────────
   searchBox: {
     flexDirection: 'row',
     alignItems: 'center',
-    height: 44,
+    height: 48,
     borderRadius: Radius.md,
     borderWidth: BorderWidth.normal,
     paddingHorizontal: Spacing.md,
     gap: Spacing.sm,
     marginBottom: Spacing.md,
+    ...Shadows.sm,
   },
   searchInput: {
     flex: 1,
-    fontSize: 15,
-    fontWeight: '500',
+    fontSize: 16,
+    fontWeight: '700',
   },
 
   // ── Categories ─────────────────────────────────────────────
   categoryContent: {
     gap: Spacing.sm,
     paddingRight: Spacing.xl,
+    paddingVertical: Spacing.xs,
   },
   categoryPill: {
     paddingHorizontal: Spacing.lg,
     paddingVertical: Spacing.sm,
-    borderRadius: Radius.sm,
+    borderRadius: Radius.xs,
     borderWidth: BorderWidth.normal,
+    ...Shadows.sm,
   },
   categoryText: {
-    fontSize: 12,
-    fontWeight: '800',
-    letterSpacing: 0.3,
+    fontSize: 11,
+    fontWeight: '900',
+    letterSpacing: 0.5,
     textTransform: 'uppercase',
+  },
+
+  // ── Bento Grid ─────────────────────────────────────────────
+  bentoGrid: {
+    gap: BentoConfig.gap,
+    marginBottom: Spacing.lg,
+  },
+  featuredContainer: {
+    width: '100%',
+  },
+  bentoRow: {
+    flexDirection: 'row',
+    gap: BentoConfig.gap,
+  },
+  miniBento: {
+    flex: 1,
+    padding: Spacing.lg,
+    borderRadius: Radius.md,
+    borderWidth: BorderWidth.normal,
+    justifyContent: 'center',
+    ...Shadows.sm,
+  },
+  miniBentoLabel: {
+    ...Typography.overline,
+    fontSize: 10,
+    fontWeight: '900',
+    color: '#000',
+  },
+  miniBentoValue: {
+    ...Typography.h3,
+    fontSize: 16,
+    color: '#000',
+    marginTop: 2,
   },
 
   // ── Content ────────────────────────────────────────────────
   content: {
     paddingHorizontal: BentoConfig.paddingH,
-    paddingTop: Spacing.sm,
+    paddingTop: Spacing.lg,
     paddingBottom: 100,
-  },
-  featuredSection: {
-    marginBottom: Spacing.sm,
   },
   topStoriesSection: {
     marginBottom: Spacing['2xl'],
+    marginTop: Spacing.sm,
   },
   horizontalScrollContent: {
-    paddingVertical: Spacing.xs,
+    paddingVertical: Spacing.sm,
+    paddingRight: Spacing.xl,
   },
   sectionHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: Spacing.lg,
+    marginBottom: Spacing.md,
+  },
+  sectionTitleBox: {
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.xs,
+    borderWidth: BorderWidth.normal,
+    borderRadius: Radius.xs,
+    ...Shadows.sm,
   },
   sectionTitle: {
-    ...Typography.h2,
+    ...Typography.overline,
+    fontSize: 14,
+    fontWeight: '900',
+    letterSpacing: 1,
   },
   countBadge: {
-    paddingHorizontal: Spacing.sm,
-    paddingVertical: 2,
-    borderRadius: Radius.xs,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: 4,
+    borderRadius: Radius.full,
+    ...Shadows.sm,
   },
   countText: {
     fontSize: 12,
-    fontWeight: '800',
+    fontWeight: '900',
   },
 
   // ── Empty State ────────────────────────────────────────────

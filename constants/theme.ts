@@ -73,118 +73,118 @@ export type ThemeColors = {
 };
 
 export const Colors: Record<ThemeName, ThemeColors> = {
-  // ── Snow (Default White) ────────────────────────────────────
+  // ── Snow (Neo-Brutalist Light) ──────────────────────────────
   snow: {
-    text: '#1A1A1A',
-    textSecondary: '#6B7280',
-    background: '#F8F9FA',
+    text: '#000000',
+    textSecondary: '#333333',
+    background: '#F0F0F0',
     surface: '#FFFFFF',
-    surfaceElevated: '#FFFFFF',
+    surfaceElevated: '#FFE600', // Yellow accent surface
     
-    accent: '#FF2D55',
-    accentSoft: 'rgba(255, 45, 85, 0.08)',
-    primary: '#1A1A1A',
+    accent: '#FF3366', // Bright Pink
+    accentSoft: 'rgba(255, 51, 102, 0.1)',
+    primary: '#000000',
     
-    border: '#E5E7EB',
-    borderStrong: '#1A1A1A',
+    border: '#000000',
+    borderStrong: '#000000',
     
-    success: '#10B981',
-    error: '#EF4444',
-    warning: '#F59E0B',
+    success: '#00FF66',
+    error: '#FF0033',
+    warning: '#FFCC00',
     
-    icon: '#9CA3AF',
-    iconActive: '#1A1A1A',
-    muted: '#F3F4F6',
-    overlay: 'rgba(0, 0, 0, 0.5)',
-    skeleton: '#E5E7EB',
+    icon: '#000000',
+    iconActive: '#FF3366',
+    muted: '#E0E0E0',
+    overlay: 'rgba(0, 0, 0, 0.4)',
+    skeleton: '#D0D0D0',
     
     tabBg: '#FFFFFF',
-    tabBorder: '#E5E7EB',
-    tabActive: '#1A1A1A',
-    tabInactive: '#9CA3AF',
+    tabBorder: '#000000',
+    tabActive: '#FF3366',
+    tabInactive: '#000000',
     
     cardBg: '#FFFFFF',
-    cardBorder: '#E5E7EB',
+    cardBorder: '#000000',
     
-    chartLine: '#1A1A1A',
+    chartLine: '#000000',
     chartBg: '#FFFFFF',
     
-    badge: '#FF2D55',
+    badge: '#000000',
     badgeText: '#FFFFFF',
   },
   
-  // ── Obsidian (Dark) ─────────────────────────────────────────
+  // ── Obsidian (Neo-Brutalist Dark) ──────────────────────────
   obsidian: {
-    text: '#F9FAFB',
-    textSecondary: '#9CA3AF',
-    background: '#0A0A0A',
-    surface: '#141414',
-    surfaceElevated: '#1C1C1C',
+    text: '#FFFFFF',
+    textSecondary: '#CCCCCC',
+    background: '#000000',
+    surface: '#1A1A1A',
+    surfaceElevated: '#2A2A2A',
     
-    accent: '#FFD700',
+    accent: '#FFD700', // Cyber Yellow
     accentSoft: 'rgba(255, 215, 0, 0.1)',
-    primary: '#F9FAFB',
+    primary: '#FFFFFF',
     
-    border: '#262626',
-    borderStrong: '#F9FAFB',
+    border: '#FFFFFF',
+    borderStrong: '#FFFFFF',
     
-    success: '#22C55E',
-    error: '#EF4444',
-    warning: '#FBBF24',
+    success: '#00FF66',
+    error: '#FF0033',
+    warning: '#FFCC00',
     
-    icon: '#6B7280',
-    iconActive: '#F9FAFB',
-    muted: '#1C1C1C',
-    overlay: 'rgba(0, 0, 0, 0.7)',
-    skeleton: '#262626',
+    icon: '#FFFFFF',
+    iconActive: '#FFD700',
+    muted: '#2A2A2A',
+    overlay: 'rgba(0, 0, 0, 0.8)',
+    skeleton: '#333333',
     
-    tabBg: '#0A0A0A',
-    tabBorder: '#262626',
+    tabBg: '#000000',
+    tabBorder: '#FFFFFF',
     tabActive: '#FFD700',
-    tabInactive: '#6B7280',
+    tabInactive: '#FFFFFF',
     
-    cardBg: '#141414',
-    cardBorder: '#262626',
+    cardBg: '#1A1A1A',
+    cardBorder: '#FFFFFF',
     
-    chartLine: '#F9FAFB',
-    chartBg: '#0A0A0A',
+    chartLine: '#FFFFFF',
+    chartBg: '#000000',
     
     badge: '#FFD700',
-    badgeText: '#0A0A0A',
+    badgeText: '#000000',
   },
   
-  // ── Ocean (Midnight Blue) ───────────────────────────────────
+  // ── Ocean (Midnight Neo) ───────────────────────────────────
   ocean: {
-    text: '#E2E8F0',
+    text: '#FFFFFF',
     textSecondary: '#94A3B8',
     background: '#0B1929',
     surface: '#0F2237',
-    surfaceElevated: '#132D46',
+    surfaceElevated: '#38BDF8',
     
     accent: '#38BDF8',
     accentSoft: 'rgba(56, 189, 248, 0.1)',
-    primary: '#E2E8F0',
+    primary: '#FFFFFF',
     
-    border: '#1E3A5F',
+    border: '#FFFFFF',
     borderStrong: '#38BDF8',
     
-    success: '#34D399',
-    error: '#FB7185',
+    success: '#00FFCC',
+    error: '#FF3366',
     warning: '#FCD34D',
     
-    icon: '#64748B',
-    iconActive: '#E2E8F0',
+    icon: '#FFFFFF',
+    iconActive: '#38BDF8',
     muted: '#132D46',
     overlay: 'rgba(11, 25, 41, 0.8)',
     skeleton: '#1E3A5F',
     
     tabBg: '#0B1929',
-    tabBorder: '#1E3A5F',
+    tabBorder: '#FFFFFF',
     tabActive: '#38BDF8',
-    tabInactive: '#64748B',
+    tabInactive: '#FFFFFF',
     
     cardBg: '#0F2237',
-    cardBorder: '#1E3A5F',
+    cardBorder: '#FFFFFF',
     
     chartLine: '#38BDF8',
     chartBg: '#0B1929',
@@ -193,44 +193,44 @@ export const Colors: Record<ThemeName, ThemeColors> = {
     badgeText: '#0B1929',
   },
   
-  // ── Forest (Green) ──────────────────────────────────────────
+  // ── Forest (Emerald Brutalist) ──────────────────────────────
   forest: {
     text: '#ECFDF5',
-    textSecondary: '#86EFAC',
-    background: '#0C1F0F',
-    surface: '#132917',
-    surfaceElevated: '#1A3A1F',
+    textSecondary: '#A7F3D0',
+    background: '#064E3B',
+    surface: '#065F46',
+    surfaceElevated: '#34D399',
     
-    accent: '#4ADE80',
-    accentSoft: 'rgba(74, 222, 128, 0.1)',
+    accent: '#34D399',
+    accentSoft: 'rgba(52, 211, 153, 0.1)',
     primary: '#ECFDF5',
     
-    border: '#1A4024',
-    borderStrong: '#4ADE80',
+    border: '#ECFDF5',
+    borderStrong: '#34D399',
     
-    success: '#34D399',
-    error: '#FB7185',
-    warning: '#FCD34D',
+    success: '#00FF66',
+    error: '#FF4D4D',
+    warning: '#FBBF24',
     
-    icon: '#4B6B52',
-    iconActive: '#ECFDF5',
-    muted: '#1A3A1F',
-    overlay: 'rgba(12, 31, 15, 0.8)',
-    skeleton: '#1A4024',
+    icon: '#ECFDF5',
+    iconActive: '#34D399',
+    muted: '#065F46',
+    overlay: 'rgba(6, 78, 59, 0.8)',
+    skeleton: '#065F46',
     
-    tabBg: '#0C1F0F',
-    tabBorder: '#1A4024',
-    tabActive: '#4ADE80',
-    tabInactive: '#4B6B52',
+    tabBg: '#064E3B',
+    tabBorder: '#ECFDF5',
+    tabActive: '#34D399',
+    tabInactive: '#ECFDF5',
     
-    cardBg: '#132917',
-    cardBorder: '#1A4024',
+    cardBg: '#065F46',
+    cardBorder: '#ECFDF5',
     
-    chartLine: '#4ADE80',
-    chartBg: '#0C1F0F',
+    chartLine: '#34D399',
+    chartBg: '#064E3B',
     
-    badge: '#4ADE80',
-    badgeText: '#0C1F0F',
+    badge: '#34D399',
+    badgeText: '#064E3B',
   },
 };
 
@@ -250,21 +250,21 @@ export const Spacing = {
 // ─── Border Radius (Bento Grid) ──────────────────────────────
 export const Radius = {
   none: 0,
-  xs: 4,
-  sm: 8,
-  md: 12,
-  lg: 16,
-  xl: 20,
-  '2xl': 24,
+  xs: 2,
+  sm: 4,
+  md: 8,
+  lg: 12,
+  xl: 16,
+  '2xl': 20,
   full: 999,
 } as const;
 
 // ─── Border Widths (Brutalist) ───────────────────────────────
 export const BorderWidth = {
   thin: 1,
-  normal: 1.5,
-  thick: 2,
-  brutalist: 3,
+  normal: 2,
+  thick: 3,
+  brutalist: 4,
 } as const;
 
 // ─── Typography ──────────────────────────────────────────────
@@ -328,37 +328,38 @@ export const Typography = {
   },
 } as const;
 
-// ─── Shadows ─────────────────────────────────────────────────
+// ─── Shadows (Neo-Brutalist: Hard, Offset, Black) ────────────
 export const Shadows = Platform.select({
   web: {
-    sm: { boxShadow: '0 1px 2px rgba(0,0,0,0.05)' },
-    md: { boxShadow: '0 2px 8px rgba(0,0,0,0.08)' },
-    lg: { boxShadow: '0 4px 16px rgba(0,0,0,0.12)' },
+    sm: { boxShadow: '2px 2px 0px 0px #000' },
+    md: { boxShadow: '4px 4px 0px 0px #000' },
+    lg: { boxShadow: '8px 8px 0px 0px #000' },
   },
   default: {
     sm: {
       shadowColor: '#000',
-      shadowOffset: { width: 0, height: 1 },
-      shadowOpacity: 0.05,
-      shadowRadius: 2,
-      elevation: 2,
+      shadowOffset: { width: 2, height: 2 },
+      shadowOpacity: 1,
+      shadowRadius: 0,
+      elevation: 3,
     },
     md: {
       shadowColor: '#000',
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.08,
-      shadowRadius: 8,
-      elevation: 4,
+      shadowOffset: { width: 4, height: 4 },
+      shadowOpacity: 1,
+      shadowRadius: 0,
+      elevation: 6,
     },
     lg: {
       shadowColor: '#000',
-      shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: 0.12,
-      shadowRadius: 16,
-      elevation: 8,
+      shadowOffset: { width: 6, height: 6 },
+      shadowOpacity: 1,
+      shadowRadius: 0,
+      elevation: 10,
     },
   },
 }) as Record<'sm' | 'md' | 'lg', any>;
+
 
 // ─── Bento Grid Config ───────────────────────────────────────
 export const BentoConfig = {
