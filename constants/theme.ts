@@ -326,6 +326,7 @@ export const Typography = {
     fontWeight: '700' as const,
     letterSpacing: -0.5,
   },
+  
 } as const;
 
 // ─── Shadows (Neo-Brutalist: Hard, Offset, Black) ────────────
@@ -389,3 +390,7 @@ export const Fonts = Platform.select({
     mono: "SFMono-Regular, Menlo, Monaco, Consolas, monospace",
   },
 });
+
+
+
+

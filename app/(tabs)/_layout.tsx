@@ -1,7 +1,7 @@
 import { BorderWidth, Radius, Shadows, Spacing } from '@/constants/theme';
 import { useThemeColors, useIsDark } from '@/hooks/use-color-scheme';
 import { Tabs } from 'expo-router';
-import { Bookmark, ChartNoAxesCombined, Newspaper } from 'lucide-react-native';
+import { Bookmark, Compass, TrendingUp } from 'lucide-react-native';
 import React from 'react';
 import { StyleSheet, View, Platform, Text } from 'react-native';
 
@@ -21,11 +21,16 @@ export default function TabLayout() {
         tabBarStyle: [
           styles.tabBar,
           {
-            backgroundColor: colors.text, // inverse of background for contrast
+            backgroundColor: colors.tabBg,
             borderColor: colors.borderStrong,
           },
         ],
         tabBarShowLabel: false,
+        tabBarSafeAreaInsets: { bottom: 0 },
+        tabBarItemStyle: {
+          justifyContent: 'center',
+          alignItems: 'center',
+        },
         tabBarBackground: () => (
           <View style={{ flex: 1, backgroundColor: 'transparent' }} />
         ),
@@ -40,15 +45,16 @@ export default function TabLayout() {
               style={[
                 styles.iconContainer,
                 focused && styles.iconContainerActive,
-                focused && {
-                  backgroundColor: colors.accent,
-                  borderColor: colors.background, // contrast border
+                {
+                  backgroundColor: focused ? colors.accent : colors.surface,
+                  borderColor: focused ? colors.borderStrong : colors.border,
                 },
+                focused && { transform: [{ translateY: -2 }, { translateX: -2 }], ...Shadows.sm }
               ]}
             >
-              <Newspaper
-                size={20}
-                color={focused ? colors.badgeText : colors.background}
+              <Compass
+                size={22}
+                color={focused ? colors.badgeText : colors.textSecondary}
                 strokeWidth={focused ? 2.5 : 2}
               />
               {focused && (
@@ -67,16 +73,16 @@ export default function TabLayout() {
               style={[
                 styles.iconContainer,
                 focused && styles.iconContainerActive,
-                focused && {
-                  backgroundColor: colors.accent,
-                  borderColor: colors.background,
+                {
+                  backgroundColor: focused ? colors.accent : colors.surface,
+                  borderColor: focused ? colors.borderStrong : colors.border,
                 },
-                !focused && { backgroundColor: '#8B5CF6' } // Example distinct color for inactive
+                focused && { transform: [{ translateY: -2 }, { translateX: -2 }], ...Shadows.sm }
               ]}
             >
-              <ChartNoAxesCombined
-                size={20}
-                color={focused ? colors.badgeText : colors.background}
+              <TrendingUp
+                size={22}
+                color={focused ? colors.badgeText : colors.textSecondary}
                 strokeWidth={focused ? 2.5 : 2}
               />
               {focused && (
@@ -95,16 +101,16 @@ export default function TabLayout() {
               style={[
                 styles.iconContainer,
                 focused && styles.iconContainerActive,
-                focused && {
-                  backgroundColor: colors.accent,
-                  borderColor: colors.background,
+                {
+                  backgroundColor: focused ? colors.accent : colors.surface,
+                  borderColor: focused ? colors.borderStrong : colors.border,
                 },
-                !focused && { backgroundColor: '#F59E0B' } // Another distinct color
+                focused && { transform: [{ translateY: -2 }, { translateX: -2 }], ...Shadows.sm }
               ]}
             >
               <Bookmark
-                size={20}
-                color={focused ? colors.badgeText : colors.background}
+                size={22}
+                color={focused ? colors.badgeText : colors.textSecondary}
                 strokeWidth={focused ? 2.5 : 2}
               />
               {focused && (
@@ -132,22 +138,18 @@ const styles = StyleSheet.create({
     ...Shadows.md,
   },
   iconContainer: {
-    width: 48,
-    height: 48,
-    borderRadius: 24, // Perfect circle
+    height: 44,
+    minWidth: 44,
+    borderRadius: 22, // Perfect circle
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: Platform.OS === 'ios' ? 24 : 0,
-    borderWidth: BorderWidth.normal,
-    borderColor: 'transparent',
+    borderWidth: BorderWidth.thick,
   },
   iconContainerActive: {
-    width: 'auto',
-    paddingHorizontal: 20,
+    paddingHorizontal: 16,
     flexDirection: 'row',
     gap: 8,
-    borderRadius: 24, // Expanded pill
-    borderWidth: BorderWidth.normal,
+    borderRadius: 22, // Expanded pill
   },
   activeText: {
     fontSize: 15,

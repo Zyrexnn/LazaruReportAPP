@@ -127,9 +127,26 @@ export function NewsCardComponent({
           style={styles.compactImage}
         />
         <View style={[styles.compactContent, { borderTopWidth: BorderWidth.thin }]}>
-          <Text style={[styles.compactSource, { color: colors.accent }]}>
-            {article.source}
-          </Text>
+          <View style={styles.compactHeader}>
+            <Text style={[styles.compactSource, { color: colors.accent }]}>
+              {article.source}
+            </Text>
+            {onToggleBookmark && (
+              <Pressable
+                hitSlop={12}
+                onPress={(e) => {
+                  e.stopPropagation();
+                  onToggleBookmark();
+                }}
+              >
+                {isBookmarked ? (
+                  <BookmarkCheck size={16} color={colors.accent} strokeWidth={3} />
+                ) : (
+                  <Bookmark size={16} color={colors.text} strokeWidth={2.5} />
+                )}
+              </Pressable>
+            )}
+          </View>
           <Text numberOfLines={2} style={[styles.compactTitle, { color: colors.text }]}>
             {article.title}
           </Text>
@@ -205,8 +222,8 @@ const styles = StyleSheet.create({
   // ── Default Card ───────────────────────────────────────────
   card: {
     marginBottom: Spacing.lg,
-    borderRadius: Radius.md,
-    borderWidth: BorderWidth.normal,
+    borderRadius: Radius.xs,
+    borderWidth: BorderWidth.thick,
     overflow: 'visible', // For shadows
   },
   cardPressed: {
@@ -228,7 +245,8 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.xs,
   },
   thumbnailContainer: {
-    borderRadius: Radius.sm,
+    borderRadius: Radius.xs,
+    borderWidth: BorderWidth.thick,
     overflow: 'hidden',
   },
   thumbnail: {
@@ -238,7 +256,7 @@ const styles = StyleSheet.create({
 
   // ── Featured Card ──────────────────────────────────────────
   featuredCard: {
-    borderRadius: Radius.lg,
+    borderRadius: Radius.xs,
     borderWidth: BorderWidth.thick,
     overflow: 'visible', // For shadows
     marginBottom: Spacing.xl,
@@ -247,8 +265,9 @@ const styles = StyleSheet.create({
     position: 'relative',
     height: 220,
     overflow: 'hidden',
-    borderTopLeftRadius: Radius.lg - BorderWidth.thick,
-    borderTopRightRadius: Radius.lg - BorderWidth.thick,
+    borderTopLeftRadius: Radius.xs,
+    borderTopRightRadius: Radius.xs,
+    borderBottomWidth: BorderWidth.thick,
   },
   featuredImage: {
     width: '100%',
@@ -294,15 +313,22 @@ const styles = StyleSheet.create({
   compactCard: {
     width: 200,
     marginRight: Spacing.xl,
-    borderRadius: Radius.md,
+    borderRadius: Radius.xs,
     overflow: 'visible', // For shadows
-    borderWidth: BorderWidth.normal,
+    borderWidth: BorderWidth.thick,
   },
   compactImage: {
     width: '100%',
     height: 110,
-    borderTopLeftRadius: Radius.md - BorderWidth.normal,
-    borderTopRightRadius: Radius.md - BorderWidth.normal,
+    borderTopLeftRadius: Radius.xs,
+    borderTopRightRadius: Radius.xs,
+    borderBottomWidth: BorderWidth.thick,
+  },
+  compactHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 2,
   },
   compactContent: {
     padding: Spacing.md,
