@@ -4,8 +4,9 @@ import { useQuery } from '@tanstack/react-query';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { ChevronLeft, TrendingDown, TrendingUp, Search, X } from 'lucide-react-native';
-import { useRef, useState, useMemo } from 'react';
+import { useRef, useState, useMemo, useEffect } from 'react';
 import { Dimensions, Platform, Pressable, ScrollView, StyleSheet, Text, View, Modal, TextInput, FlatList } from 'react-native';
+import Animated, { useAnimatedStyle, useSharedValue, withSequence, withTiming, interpolateColor } from 'react-native-reanimated';
 import { WebView } from 'react-native-webview';
 import { fetchMarketSnapshot } from '@/src/services/newsApi';
 
@@ -18,8 +19,92 @@ function StatCard({ label, value, color }: { label: string; value: string; color
   const colors = useThemeColors();
   return (
     <View style={[styles.statCard, { backgroundColor: colors.cardBg, borderColor: colors.cardBorder }, Shadows.sm]}>
-      <Text style={[styles.statLabel, { color: '#000' }]}>{label}</Text>
+      <Text style={[styles.statLabel, { color: colors.textSecondary }]}>{label}</Text>
       <Text style={[styles.statValue, { color: color || colors.text }]}>{value}</Text>
+    </View>
+  );
+}
+
+function OrderBook({ symbol, type }: { symbol: string, type: 'crypto' | 'stock' }) {
+  const colors = useThemeColors();
+  
+  const orderBookQuery = useQuery({
+    queryKey: ['order-book', symbol],
+    queryFn: async () => {
+      if (type !== 'crypto') return null;
+      try {
+        const res = await fetch(`https://api.binance.com/api/v3/depth?symbol=${symbol}USDT&limit=10`);
+        return await res.json();
+      } catch (err) {
+        console.error('Order book fetch failed', err);
+        return null;
+      }
+    },
+    refetchInterval: 2000,
+    enabled: type === 'crypto',
+  });
+
+  if (type !== 'crypto' || !orderBookQuery.data) return null;
+
+  const bids = orderBookQuery.data.bids || [];
+  const asks = orderBookQuery.data.asks || [];
+
+  return (
+    <View style={styles.orderBookSection}>
+      <Text style={[styles.sectionTitle, { color: colors.text }]}>Order Book (Binance Live)</Text>
+      <View style={[styles.orderBookContainer, { backgroundColor: colors.cardBg, borderColor: colors.borderStrong }]}>
+        <View style={styles.orderBookSide}>
+          <Text style={[styles.orderSideHeader, { color: colors.success }]}>BID (BUY)</Text>
+          {bids.slice(0, 8).map((bid: string[], i: number) => (
+            <View key={`bid-${i}`} style={styles.orderRow}>
+              <Text style={[styles.orderPriceText, { color: colors.success }]}>{parseFloat(bid[0]).toLocaleString('en-US', { minimumFractionDigits: 2 })}</Text>
+              <Text style={[styles.orderAmountText, { color: colors.textSecondary }]}>{parseFloat(bid[1]).toFixed(4)}</Text>
+            </View>
+          ))}
+        </View>
+        <View style={[styles.orderBookDivider, { backgroundColor: colors.border }]} />
+        <View style={styles.orderBookSide}>
+          <Text style={[styles.orderSideHeader, { color: colors.error }]}>ASK (SELL)</Text>
+          {asks.slice(0, 8).map((ask: string[], i: number) => (
+            <View key={`ask-${i}`} style={styles.orderRow}>
+              <Text style={[styles.orderPriceText, { color: colors.error }]}>{parseFloat(ask[0]).toLocaleString('en-US', { minimumFractionDigits: 2 })}</Text>
+              <Text style={[styles.orderAmountText, { color: colors.textSecondary }]}>{parseFloat(ask[1]).toFixed(4)}</Text>
+            </View>
+          ))}
+        </View>
+      </View>
+    </View>
+  );
+}
+
+function PriceHeader({ detail, colors, positive }: { detail: any, colors: any, positive: boolean }) {
+  const prevPrice = useRef(detail.price);
+  const flashValue = useSharedValue(0);
+
+  useEffect(() => {
+    if (detail.price > prevPrice.current) {
+      flashValue.value = withSequence(withTiming(1, { duration: 150 }), withTiming(0, { duration: 600 }));
+    } else if (detail.price < prevPrice.current) {
+      flashValue.value = withSequence(withTiming(-1, { duration: 150 }), withTiming(0, { duration: 600 }));
+    }
+    prevPrice.current = detail.price;
+  }, [detail.price]);
+
+  const animatedPriceStyle = useAnimatedStyle(() => ({
+    color: interpolateColor(flashValue.value, [-1, 0, 1], [colors.error, colors.text, colors.success])
+  }));
+
+  return (
+    <View style={styles.priceSection}>
+      <Animated.Text style={[styles.currentPrice, animatedPriceStyle]}>
+        ${detail.price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: detail.price > 100 ? 2 : 6 })}
+      </Animated.Text>
+      <View style={[styles.changePill, { backgroundColor: positive ? 'rgba(0, 255, 102, 0.1)' : 'rgba(255, 0, 51, 0.1)' }]}>
+        {positive ? <TrendingUp size={16} color={colors.success} strokeWidth={2.5} /> : <TrendingDown size={16} color={colors.error} strokeWidth={2.5} />}
+        <Text style={[styles.changeText, { color: positive ? colors.success : colors.error }]}>
+          {positive ? '+' : ''}{detail.change24h.toFixed(2)} ({positive ? '+' : ''}{detail.changePercent24h.toFixed(2)}%)
+        </Text>
+      </View>
     </View>
   );
 }
@@ -83,7 +168,7 @@ export default function MarketDetailScreen() {
 
       return { symbol, name: symbol, price: 0, change24h: 0, changePercent24h: 0, high24h: 0, low24h: 0, volume24h: 0, type: 'stock' as const };
     },
-    refetchInterval: 10000,
+    refetchInterval: 3000, // Faster updates for real-time feel
   });
 
   const allAssetsQuery = useQuery({
@@ -276,17 +361,7 @@ export default function MarketDetailScreen() {
 
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
         {/* ── Price Section ─────────────────────────────────── */}
-        <View style={styles.priceSection}>
-          <Text style={[styles.currentPrice, { color: colors.text }]}>
-            ${detail.price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: detail.price > 100 ? 2 : 6 })}
-          </Text>
-          <View style={[styles.changePill, { backgroundColor: positive ? 'rgba(16,185,129,0.12)' : 'rgba(239,68,68,0.12)' }]}>
-            {positive ? <TrendingUp size={16} color={colors.success} strokeWidth={2.5} /> : <TrendingDown size={16} color={colors.error} strokeWidth={2.5} />}
-            <Text style={[styles.changeText, { color: positive ? colors.success : colors.error }]}>
-              {positive ? '+' : ''}{detail.change24h.toFixed(2)} ({positive ? '+' : ''}{detail.changePercent24h.toFixed(2)}%)
-            </Text>
-          </View>
-        </View>
+        <PriceHeader detail={detail} colors={colors} positive={positive} />
 
         {/* ── Chart Controls ───────────────────────────────── */}
         <View style={styles.controlsRow}>
@@ -369,6 +444,9 @@ export default function MarketDetailScreen() {
             />
           </View>
         </View>
+
+        {/* ── Order Book (Crypto Only) ────────────────────── */}
+        <OrderBook symbol={symbol} type={type} />
 
         <View style={{ height: 100 }} />
       </ScrollView>
@@ -459,6 +537,49 @@ const styles = StyleSheet.create({
   statLabel: { ...Typography.overline, marginBottom: Spacing.sm },
   statValue: { ...Typography.mono, fontSize: 18 },
   loadingText: { ...Typography.h3, textAlign: 'center', marginTop: 100 },
+
+  // ── Order Book ─────────────────────────────────────────────
+  orderBookSection: {
+    paddingHorizontal: BentoConfig.paddingH,
+    marginTop: Spacing.xl,
+  },
+  orderBookContainer: {
+    flexDirection: 'row',
+    borderRadius: Radius.lg,
+    borderWidth: BorderWidth.thick,
+    padding: Spacing.md,
+    ...Shadows.md,
+  },
+  orderBookSide: {
+    flex: 1,
+    paddingHorizontal: Spacing.xs,
+  },
+  orderSideHeader: {
+    ...Typography.overline,
+    fontSize: 10,
+    fontWeight: '900',
+    marginBottom: Spacing.sm,
+    textAlign: 'center',
+  },
+  orderRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingVertical: 3,
+  },
+  orderPriceText: {
+    ...Typography.mono,
+    fontSize: 11,
+    fontWeight: '700',
+  },
+  orderAmountText: {
+    ...Typography.mono,
+    fontSize: 10,
+  },
+  orderBookDivider: {
+    width: 1,
+    height: '100%',
+    marginHorizontal: Spacing.sm,
+  },
 
   // ── Modal ──────────────────────────────────────────────────
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.6)', justifyContent: 'flex-end' },

@@ -8,8 +8,9 @@ import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { Search, TrendingUp, TrendingDown } from 'lucide-react-native';
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect, useRef } from 'react';
 import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import Animated, { useAnimatedStyle, useSharedValue, withSequence, withTiming, interpolateColor } from 'react-native-reanimated';
 
 function MarketSkeleton() {
   const colors = useThemeColors();
@@ -42,8 +43,26 @@ function StatBento({ label, value, sub, color }: { label: string; value: string;
 
 function MarketRow({ item, onPress }: { item: MarketTicker; onPress: () => void }) {
   const colors = useThemeColors();
-  const positive = item.changePercent24h >= 0;
-  const changeColor = positive ? colors.success : colors.error;
+  const prevPrice = useRef(item.price);
+  const flashValue = useSharedValue(0);
+
+  useEffect(() => {
+    if (item.price > prevPrice.current) {
+      flashValue.value = withSequence(withTiming(1, { duration: 150 }), withTiming(0, { duration: 600 }));
+    } else if (item.price < prevPrice.current) {
+      flashValue.value = withSequence(withTiming(-1, { duration: 150 }), withTiming(0, { duration: 600 }));
+    }
+    prevPrice.current = item.price;
+  }, [item.price]);
+
+  const animatedPriceStyle = useAnimatedStyle(() => ({
+    color: interpolateColor(flashValue.value, [-1, 0, 1], [colors.error, colors.text, colors.success])
+  }));
+
+  // Unified logic: Red if negative, Green if positive (based on 24h change)
+  const isPositive = item.changePercent24h >= 0;
+  const statusColor = isPositive ? colors.success : colors.error;
+  const badgeBg = isPositive ? 'rgba(0, 255, 102, 0.1)' : 'rgba(255, 0, 51, 0.1)';
 
   return (
     <Pressable
@@ -54,37 +73,27 @@ function MarketRow({ item, onPress }: { item: MarketTicker; onPress: () => void 
         pressed && styles.rowPressed,
       ]}
     >
-      {/* Symbol */}
       <View style={styles.leftSection}>
         <View style={[styles.symbolIcon, { backgroundColor: colors.surface, borderColor: colors.borderStrong }]}>
-          <Text style={[styles.symbolIconText, { color: colors.text }]}>
-            {item.symbol.charAt(0)}
-          </Text>
+          <Text style={[styles.symbolIconText, { color: colors.text }]}>{item.symbol.charAt(0)}</Text>
         </View>
         <View style={styles.symbolInfo}>
           <Text style={[styles.symbol, { color: colors.text }]}>{item.symbol}</Text>
-          <Text style={[styles.name, { color: colors.textSecondary }]} numberOfLines={1}>
-            {item.name}
-          </Text>
+          <Text style={[styles.name, { color: colors.textSecondary }]} numberOfLines={1}>{item.name}</Text>
         </View>
       </View>
 
-      {/* Sparkline */}
       <View style={styles.middleSection}>
-        <Sparkline data={item.sparkline} color={changeColor} width={72} height={28} />
+        <Sparkline data={item.sparkline} color={statusColor} width={72} height={28} />
       </View>
 
-      {/* Price */}
       <View style={styles.rightSection}>
-        <Text style={[styles.price, { color: colors.text }]}>
-          ${item.price.toLocaleString('en-US', {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: item.price > 100 ? 2 : 4,
-          })}
-        </Text>
-        <View style={[styles.changeBadge, { backgroundColor: positive ? 'rgba(16,185,129,0.12)' : 'rgba(239,68,68,0.12)', borderColor: changeColor }]}>
-          <Text style={[styles.changeText, { color: changeColor }]}>
-            {positive ? '+' : ''}{item.changePercent24h.toFixed(2)}%
+        <Animated.Text style={[styles.price, animatedPriceStyle]}>
+          ${item.price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: item.price > 100 ? 2 : 4 })}
+        </Animated.Text>
+        <View style={[styles.changeBadge, { backgroundColor: badgeBg, borderColor: statusColor }]}>
+          <Text style={[styles.changeText, { color: statusColor }]}>
+            {isPositive ? '+' : ''}{item.changePercent24h.toFixed(2)}%
           </Text>
         </View>
       </View>
@@ -102,7 +111,7 @@ export default function MarketScreen() {
   const marketQuery = useQuery({
     queryKey: ['market-snapshot'],
     queryFn: fetchMarketSnapshot,
-    refetchInterval: 30000,
+    refetchInterval: 5000, // Real-time updates every 5 seconds
   });
 
   const sentimentQuery = useQuery({
