@@ -32,7 +32,7 @@ function MarketSkeleton() {
 function StatBento({ label, value, sub, color }: { label: string; value: string; sub?: string; color?: string }) {
   const colors = useThemeColors();
   return (
-    <View style={[styles.statBento, { backgroundColor: colors.cardBg, borderColor: colors.cardBorder }]}>
+    <View style={[styles.statBento, { backgroundColor: colors.cardBg, borderColor: colors.borderStrong }]}>
       <Text style={[styles.statLabel, { color: colors.textSecondary }]}>{label}</Text>
       <Text style={[styles.statValue, { color: color || colors.text }]}>{value}</Text>
       {sub && <Text style={[styles.statSub, { color: colors.textSecondary }]}>{sub}</Text>}
@@ -50,13 +50,13 @@ function MarketRow({ item, onPress }: { item: MarketTicker; onPress: () => void 
       onPress={onPress}
       style={({ pressed }) => [
         styles.row,
-        { borderBottomColor: colors.border },
-        pressed && { backgroundColor: colors.accentSoft },
+        { backgroundColor: colors.cardBg, borderColor: colors.borderStrong },
+        pressed && styles.rowPressed,
       ]}
     >
       {/* Symbol */}
       <View style={styles.leftSection}>
-        <View style={[styles.symbolIcon, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+        <View style={[styles.symbolIcon, { backgroundColor: colors.surface, borderColor: colors.borderStrong }]}>
           <Text style={[styles.symbolIconText, { color: colors.text }]}>
             {item.symbol.charAt(0)}
           </Text>
@@ -82,7 +82,7 @@ function MarketRow({ item, onPress }: { item: MarketTicker; onPress: () => void 
             maximumFractionDigits: item.price > 100 ? 2 : 4,
           })}
         </Text>
-        <View style={[styles.changeBadge, { backgroundColor: positive ? 'rgba(16,185,129,0.12)' : 'rgba(239,68,68,0.12)' }]}>
+        <View style={[styles.changeBadge, { backgroundColor: positive ? 'rgba(16,185,129,0.12)' : 'rgba(239,68,68,0.12)', borderColor: changeColor }]}>
           <Text style={[styles.changeText, { color: changeColor }]}>
             {positive ? '+' : ''}{item.changePercent24h.toFixed(2)}%
           </Text>
@@ -151,7 +151,7 @@ export default function MarketScreen() {
       <StatusBar style={isDark ? 'light' : 'dark'} />
 
       {/* ── Header ────────────────────────────────────────────── */}
-      <View style={styles.header}>
+      <View style={[styles.header, { borderBottomColor: colors.borderStrong }]}>
         <View>
           <Text style={[styles.headerTitle, { color: colors.text }]}>Markets</Text>
           <View style={styles.sentimentRow}>
@@ -193,9 +193,9 @@ export default function MarketScreen() {
           )}
         </View>
 
-        {/* ── Search ──────────────────────────────────────────── */}
-        <View style={styles.searchSection}>
-          <View style={[styles.searchBox, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+        {/* ── Controls ──────────────────────────────────────────── */}
+        <View style={styles.controlsSection}>
+          <View style={[styles.searchBox, { backgroundColor: colors.surface, borderColor: colors.borderStrong }]}>
             <Search size={16} color={colors.textSecondary} />
             <TextInput
               style={[styles.searchInput, { color: colors.text }]}
@@ -205,39 +205,41 @@ export default function MarketScreen() {
               onChangeText={setSearchQuery}
             />
           </View>
-        </View>
 
-        {/* ── Tab Switcher ────────────────────────────────────── */}
-        <View style={styles.tabContainer}>
-          {(['crypto', 'stocks'] as const).map((tab) => {
-            const active = activeTab === tab;
-            return (
-              <Pressable
-                key={tab}
-                onPress={() => setActiveTab(tab)}
-                style={[
-                  styles.tabBtn,
-                  {
-                    backgroundColor: active ? colors.accent : 'transparent',
-                    borderColor: active ? colors.accent : colors.border,
-                  },
-                ]}
-              >
-                <Text
-                  style={[
-                    styles.tabBtnText,
-                    { color: active ? colors.badgeText : colors.textSecondary },
+          <View style={styles.tabRow}>
+            {(['crypto', 'stocks'] as const).map((tab) => {
+              const active = activeTab === tab;
+              return (
+                <Pressable
+                  key={tab}
+                  onPress={() => setActiveTab(tab)}
+                  style={({ pressed }) => [
+                    styles.tabBtn,
+                    {
+                      backgroundColor: active ? colors.accent : colors.surface,
+                      borderColor: active ? colors.borderStrong : colors.border,
+                    },
+                    active && { transform: [{ translateY: -2 }, { translateX: -2 }] },
+                    pressed && !active && { backgroundColor: colors.accentSoft },
                   ]}
                 >
-                  {tab === 'crypto' ? 'Crypto' : 'Stocks'}
-                </Text>
-              </Pressable>
-            );
-          })}
-          <View style={{ flex: 1 }} />
-          <Text style={[styles.assetCount, { color: colors.textSecondary }]}>
-            {filteredData.length} assets
-          </Text>
+                  <Text
+                    style={[
+                      styles.tabBtnText,
+                      { color: active ? colors.badgeText : colors.textSecondary },
+                    ]}
+                  >
+                    {tab === 'crypto' ? 'Crypto' : 'Stocks'}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </View>
+          <View style={{ alignItems: 'flex-end', marginTop: -4 }}>
+            <Text style={[styles.assetCount, { color: colors.textSecondary }]}>
+              {filteredData.length} assets
+            </Text>
+          </View>
         </View>
 
         {/* ── List Header ─────────────────────────────────────── */}
@@ -322,9 +324,10 @@ const styles = StyleSheet.create({
   statBento: {
     flex: 1,
     padding: Spacing.lg,
-    borderRadius: Radius.md,
-    borderWidth: BorderWidth.normal,
+    borderRadius: Radius.xs,
+    borderWidth: BorderWidth.thick,
     justifyContent: 'center',
+    ...Shadows.md,
   },
   statLabel: {
     ...Typography.overline,
@@ -372,8 +375,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     height: 48,
-    borderRadius: Radius.md,
-    borderWidth: BorderWidth.normal,
+    borderRadius: Radius.xs,
+    borderWidth: BorderWidth.thick,
     paddingHorizontal: Spacing.md,
     gap: Spacing.sm,
     ...Shadows.sm,
@@ -391,14 +394,20 @@ const styles = StyleSheet.create({
     flex: 1,
     height: 44,
     borderRadius: Radius.xs,
-    borderWidth: BorderWidth.normal,
+    borderWidth: BorderWidth.thick,
     justifyContent: 'center',
     alignItems: 'center',
+    ...Shadows.sm,
   },
   tabBtnText: {
     fontSize: 13,
     fontWeight: '900',
     letterSpacing: 1,
+  },
+  assetCount: {
+    ...Typography.caption,
+    fontSize: 11,
+    marginTop: Spacing.xs,
   },
 
   // ── List ───────────────────────────────────────────────────
@@ -423,11 +432,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     padding: Spacing.lg,
-    borderRadius: Radius.md,
-    borderWidth: BorderWidth.normal,
+    borderRadius: Radius.xs,
+    borderWidth: BorderWidth.thick,
+    marginBottom: Spacing.md,
+    ...Shadows.sm,
   },
   rowPressed: {
     transform: [{ translateX: 2 }, { translateY: 2 }],
+    ...Shadows.none,
   },
   leftSection: {
     flex: 1.5,
@@ -438,8 +450,8 @@ const styles = StyleSheet.create({
   symbolIcon: {
     width: 40,
     height: 40,
-    borderRadius: Radius.sm,
-    borderWidth: BorderWidth.normal,
+    borderRadius: Radius.xs,
+    borderWidth: BorderWidth.thick,
     justifyContent: 'center',
     alignItems: 'center',
     ...Shadows.sm,
@@ -480,7 +492,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.sm,
     paddingVertical: 2,
     borderRadius: Radius.xs,
-    borderWidth: BorderWidth.thin,
+    borderWidth: BorderWidth.normal,
   },
   changeText: {
     fontSize: 11,

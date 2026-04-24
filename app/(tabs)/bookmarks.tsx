@@ -1,5 +1,5 @@
 import { SkeletonBlock } from '@/components/Skeleton';
-import { BentoConfig, BorderWidth, Radius, Spacing, Typography } from '@/constants/theme';
+import { BentoConfig, BorderWidth, Radius, Shadows, Spacing, Typography } from '@/constants/theme';
 import { useThemeColors, useIsDark } from '@/hooks/use-color-scheme';
 import { NewsCard } from '@/src/components/NewsCard';
 import { getBookmarks, removeBookmark } from '@/src/services/db';

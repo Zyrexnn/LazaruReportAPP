@@ -1,3 +1,34 @@
+import { BorderWidth, Radius, Shadows, Spacing, Typography } from '@/constants/theme';
+import { useThemeColors } from '@/hooks/use-color-scheme';
+import type { NewsArticle } from '@/src/types/news';
+import { Image } from 'expo-image';
+import { Bookmark, BookmarkCheck, Clock3 } from 'lucide-react-native';
+import React, { memo } from 'react';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
+
+type NewsCardProps = {
+  article: NewsArticle;
+  isBookmarked?: boolean;
+  onPress: () => void;
+  onToggleBookmark?: () => void;
+  compact?: boolean;
+  featured?: boolean;
+};
+
+const FALLBACK_IMAGE =
+  'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?q=80&w=1400&auto=format&fit=crop';
+
+function timeAgo(dateStr: string): string {
+  const now = Date.now();
+  const diff = now - new Date(dateStr).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 60) return `${mins}m ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs}h ago`;
+  const days = Math.floor(hrs / 24);
+  return `${days}d ago`;
+}
+
 export function NewsCardComponent({
   article,
   isBookmarked = false,

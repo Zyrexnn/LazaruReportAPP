@@ -3,7 +3,7 @@ import { useThemeColors, useIsDark } from '@/hooks/use-color-scheme';
 import { Tabs } from 'expo-router';
 import { Bookmark, ChartNoAxesCombined, Newspaper } from 'lucide-react-native';
 import React from 'react';
-import { StyleSheet, View, Platform } from 'react-native';
+import { StyleSheet, View, Platform, Text } from 'react-native';
 
 import { HapticTab } from '@/components/haptic-tab';
 
@@ -21,8 +21,8 @@ export default function TabLayout() {
         tabBarStyle: [
           styles.tabBar,
           {
-            backgroundColor: colors.tabBg,
-            borderColor: colors.tabBorder,
+            backgroundColor: colors.text, // inverse of background for contrast
+            borderColor: colors.borderStrong,
           },
         ],
         tabBarShowLabel: false,
@@ -39,18 +39,21 @@ export default function TabLayout() {
             <View
               style={[
                 styles.iconContainer,
+                focused && styles.iconContainerActive,
                 focused && {
                   backgroundColor: colors.accent,
-                  borderColor: '#000',
-                  ...Shadows.sm,
+                  borderColor: colors.background, // contrast border
                 },
               ]}
             >
               <Newspaper
                 size={20}
-                color={focused ? colors.badgeText : color}
-                strokeWidth={focused ? 2.5 : 1.5}
+                color={focused ? colors.badgeText : colors.background}
+                strokeWidth={focused ? 2.5 : 2}
               />
+              {focused && (
+                <Text style={[styles.activeText, { color: colors.badgeText }]}>News</Text>
+              )}
             </View>
           ),
         }}
@@ -63,18 +66,22 @@ export default function TabLayout() {
             <View
               style={[
                 styles.iconContainer,
+                focused && styles.iconContainerActive,
                 focused && {
                   backgroundColor: colors.accent,
-                  borderColor: '#000',
-                  ...Shadows.sm,
+                  borderColor: colors.background,
                 },
+                !focused && { backgroundColor: '#8B5CF6' } // Example distinct color for inactive
               ]}
             >
               <ChartNoAxesCombined
                 size={20}
-                color={focused ? colors.badgeText : color}
-                strokeWidth={focused ? 2.5 : 1.5}
+                color={focused ? colors.badgeText : colors.background}
+                strokeWidth={focused ? 2.5 : 2}
               />
+              {focused && (
+                <Text style={[styles.activeText, { color: colors.badgeText }]}>Market</Text>
+              )}
             </View>
           ),
         }}
@@ -87,18 +94,22 @@ export default function TabLayout() {
             <View
               style={[
                 styles.iconContainer,
+                focused && styles.iconContainerActive,
                 focused && {
                   backgroundColor: colors.accent,
-                  borderColor: '#000',
-                  ...Shadows.sm,
+                  borderColor: colors.background,
                 },
+                !focused && { backgroundColor: '#F59E0B' } // Another distinct color
               ]}
             >
               <Bookmark
                 size={20}
-                color={focused ? colors.badgeText : color}
-                strokeWidth={focused ? 2.5 : 1.5}
+                color={focused ? colors.badgeText : colors.background}
+                strokeWidth={focused ? 2.5 : 2}
               />
+              {focused && (
+                <Text style={[styles.activeText, { color: colors.badgeText }]}>Saved</Text>
+              )}
             </View>
           ),
         }}
@@ -113,22 +124,33 @@ const styles = StyleSheet.create({
     bottom: Platform.OS === 'ios' ? 28 : 20,
     left: Spacing.xl,
     right: Spacing.xl,
-    height: 64,
-    borderRadius: Radius.md,
+    height: 72,
+    borderRadius: 36, // Floating pill
     borderWidth: BorderWidth.thick,
-    borderTopWidth: BorderWidth.thick,
-    paddingHorizontal: Spacing.sm,
+    paddingHorizontal: Spacing.md,
     paddingBottom: 0,
     ...Shadows.md,
   },
   iconContainer: {
-    width: 44,
-    height: 44,
-    borderRadius: Radius.sm,
-    borderWidth: BorderWidth.normal,
-    borderColor: 'transparent',
+    width: 48,
+    height: 48,
+    borderRadius: 24, // Perfect circle
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: Platform.OS === 'ios' ? 20 : 0,
+    marginTop: Platform.OS === 'ios' ? 24 : 0,
+    borderWidth: BorderWidth.normal,
+    borderColor: 'transparent',
+  },
+  iconContainerActive: {
+    width: 'auto',
+    paddingHorizontal: 20,
+    flexDirection: 'row',
+    gap: 8,
+    borderRadius: 24, // Expanded pill
+    borderWidth: BorderWidth.normal,
+  },
+  activeText: {
+    fontSize: 15,
+    fontWeight: '800',
   },
 });
