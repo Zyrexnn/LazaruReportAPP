@@ -1,3 +1,13 @@
+export function NewsCardComponent({
+  article,
+  isBookmarked = false,
+  onPress,
+  onToggleBookmark,
+  compact = false,
+  featured = false,
+}: NewsCardProps) {
+  const colors = useThemeColors();
+
   // ── FEATURED CARD (Full-width bento hero) ───────────────────
   if (featured) {
     return (
