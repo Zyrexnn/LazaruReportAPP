@@ -128,8 +128,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.md,
     paddingVertical: 4,
     borderRadius: Radius.xs,
+    borderWidth: BorderWidth.thick,
     marginTop: Spacing.sm,
-    ...Shadows.sm,
+    ...Shadows.md,
   },
   countText: {
     fontSize: 12,
@@ -144,7 +145,7 @@ const styles = StyleSheet.create({
   emptyIcon: {
     width: 80,
     height: 80,
-    borderRadius: Radius.md,
+    borderRadius: Radius.xs,
     borderWidth: BorderWidth.thick,
     justifyContent: 'center',
     alignItems: 'center',

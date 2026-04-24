@@ -88,14 +88,15 @@ export default function HomeScreen() {
       );
     } else if (category !== 'all') {
       const keywords: Record<string, string[]> = {
-        geopolitics: ['politics', 'geopolitics', 'world', 'election', 'war', 'government', 'biden', 'putin', 'china'],
-        ai_tech: ['tech', 'technology', 'ai', 'software', 'apple', 'google', 'microsoft', 'nvidia', 'openai', 'cyber'],
-        crypto: ['crypto', 'bitcoin', 'ethereum', 'btc', 'eth', 'solana', 'blockchain', 'binance', 'coinbase'],
-        wall_street: ['market', 'stock', 'trading', 'wall street', 'dow', 'nasdaq', 's&p', 'fed', 'inflation', 'economy'],
-        startups: ['startup', 'founder', 'funding', 'vc', 'venture', 'y combinator', 'seed', 'series'],
+        geopolitics: ['politics', 'geopolitics', 'world', 'election', 'war', 'government', 'biden', 'putin', 'china', 'middle east', 'nato', 'diplomacy', 'foreign policy', 'israel', 'ukraine', 'russia', 'un'],
+        ai_tech: ['tech', 'technology', 'ai', 'software', 'apple', 'google', 'microsoft', 'nvidia', 'openai', 'cyber', 'robotics', 'silicon', 'digital', 'internet', 'computing', 'meta', 'amazon', 'semiconductor'],
+        crypto: ['crypto', 'bitcoin', 'ethereum', 'btc', 'eth', 'solana', 'blockchain', 'binance', 'coinbase', 'defi', 'nft', 'mining', 'wallet', 'token', 'altcoin', 'doge'],
+        wall_street: ['market', 'stock', 'trading', 'wall street', 'dow', 'nasdaq', 's&p', 'fed', 'inflation', 'economy', 'finance', 'investing', 'bank', 'interest rate', 'yield', 'bond', 'gold'],
+        startups: ['startup', 'founder', 'funding', 'vc', 'venture', 'y combinator', 'seed', 'series', 'entrepreneur', 'equity', 'ipo', 'unicorn', 'pitch', 'saas'],
       };
       allNews = allNews.filter((article) => {
-        const text = `${article.title} ${article.summary}`.toLowerCase();
+        // Stricter relevance: check title, summary, source, and provider-provided category
+        const text = `${article.title} ${article.summary} ${article.source} ${article.category || ''}`.toLowerCase();
         return keywords[category]?.some((keyword) => text.includes(keyword));
       });
     }
@@ -294,7 +295,9 @@ export default function HomeScreen() {
                       key={item.id}
                       compact
                       article={item}
+                      isBookmarked={bookmarkedIds.has(item.id)}
                       onPress={() => openArticle(item)}
+                      onToggleBookmark={() => toggleBookmark(item)}
                     />
                   ))}
                 </ScrollView>
@@ -370,19 +373,19 @@ const styles = StyleSheet.create({
   iconBtn: {
     width: 44,
     height: 44,
-    borderRadius: Radius.md,
-    borderWidth: BorderWidth.normal,
+    borderRadius: Radius.xs,
+    borderWidth: BorderWidth.thick,
     justifyContent: 'center',
     alignItems: 'center',
-    ...Shadows.sm,
+    ...Shadows.md,
   },
 
   // ── Theme Switcher ─────────────────────────────────────────
   themeSwitcherContainer: {
     marginBottom: Spacing.md,
     padding: Spacing.sm,
-    borderRadius: Radius.lg,
-    borderWidth: BorderWidth.normal,
+    borderRadius: Radius.xs,
+    borderWidth: BorderWidth.thick,
     ...Shadows.md,
   },
 
@@ -391,12 +394,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     height: 48,
-    borderRadius: Radius.md,
-    borderWidth: BorderWidth.normal,
+    borderRadius: Radius.xs,
+    borderWidth: BorderWidth.thick,
     paddingHorizontal: Spacing.md,
     gap: Spacing.sm,
     marginBottom: Spacing.md,
-    ...Shadows.sm,
+    ...Shadows.md,
   },
   searchInput: {
     flex: 1,
@@ -414,8 +417,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.lg,
     paddingVertical: Spacing.sm,
     borderRadius: Radius.xs,
-    borderWidth: BorderWidth.normal,
-    ...Shadows.sm,
+    borderWidth: BorderWidth.thick,
+    ...Shadows.md,
   },
   categoryText: {
     fontSize: 11,
@@ -439,10 +442,10 @@ const styles = StyleSheet.create({
   miniBento: {
     flex: 1,
     padding: Spacing.lg,
-    borderRadius: Radius.md,
-    borderWidth: BorderWidth.normal,
+    borderRadius: Radius.xs,
+    borderWidth: BorderWidth.thick,
     justifyContent: 'center',
-    ...Shadows.sm,
+    ...Shadows.md,
   },
   miniBentoLabel: {
     ...Typography.overline,
@@ -480,9 +483,9 @@ const styles = StyleSheet.create({
   sectionTitleBox: {
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.xs,
-    borderWidth: BorderWidth.normal,
+    borderWidth: BorderWidth.thick,
     borderRadius: Radius.xs,
-    ...Shadows.sm,
+    ...Shadows.md,
   },
   sectionTitle: {
     ...Typography.overline,
@@ -493,8 +496,9 @@ const styles = StyleSheet.create({
   countBadge: {
     paddingHorizontal: Spacing.md,
     paddingVertical: 4,
-    borderRadius: Radius.full,
-    ...Shadows.sm,
+    borderRadius: Radius.xs,
+    borderWidth: BorderWidth.thick,
+    ...Shadows.md,
   },
   countText: {
     fontSize: 12,

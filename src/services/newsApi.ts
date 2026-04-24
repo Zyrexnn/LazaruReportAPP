@@ -47,6 +47,7 @@ const dedupeArticles = (articles: NewsArticle[]) => {
     const exists = deduped.some(
       (candidate) =>
         candidate.contentUrl === article.contentUrl ||
+        (candidate.imageUrl && article.imageUrl && candidate.imageUrl === article.imageUrl) ||
         normalizeHeadline(candidate.title) === normalizeHeadline(article.title) ||
         jaccardSimilarity(candidate.title, article.title) >= 0.86
     );
