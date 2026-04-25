@@ -7,18 +7,45 @@ import 'react-native-reanimated';
 
 import { useIsDark } from '@/hooks/use-color-scheme';
 import { initializeDatabase } from '@/src/services/db';
+import { BootScreen } from '@/components/BootScreen';
+import { useState } from 'react';
 
 export const unstable_settings = {
   anchor: '(tabs)',
 };
 
-const queryClient = new QueryClient();
+// Export queryClient if needed elsewhere
+export const queryClient = new QueryClient();
 
 export default function RootLayout() {
   const isDark = useIsDark();
+  const [isBooting, setIsBooting] = useState(true);
+  const [isDataReady, setIsDataReady] = useState(false);
 
   useEffect(() => {
     initializeDatabase().catch(() => undefined);
+    
+    const prefetchData = async () => {
+      try {
+        // Prefetch multiple critical queries
+        await Promise.allSettled([
+          queryClient.prefetchQuery({
+            queryKey: ['news-feed'],
+            queryFn: () => import('@/src/services/newsApi').then(m => m.fetchUnifiedNews()),
+          }),
+          queryClient.prefetchQuery({
+            queryKey: ['market-snapshot'],
+            queryFn: () => import('@/src/services/newsApi').then(m => m.fetchMarketSnapshot()),
+          })
+        ]);
+      } catch (e) {
+        console.log('Prefetch failed, probably offline');
+      } finally {
+        setIsDataReady(true);
+      }
+    };
+    
+    prefetchData();
   }, []);
 
   return (
@@ -31,6 +58,12 @@ export default function RootLayout() {
           <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
         </Stack>
         <StatusBar style={isDark ? 'light' : 'dark'} />
+        {isBooting && (
+          <BootScreen 
+            isReady={isDataReady} 
+            onFinish={() => setIsBooting(false)} 
+          />
+        )}
       </ThemeProvider>
     </QueryClientProvider>
   );
