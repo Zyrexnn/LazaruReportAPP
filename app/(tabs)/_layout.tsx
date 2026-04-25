@@ -28,6 +28,7 @@ export default function TabLayout() {
         tabBarShowLabel: false,
         tabBarSafeAreaInsets: { bottom: 0 },
         tabBarItemStyle: {
+          height: 60,
           justifyContent: 'center',
           alignItems: 'center',
         },
@@ -127,20 +128,23 @@ export default function TabLayout() {
 const styles = StyleSheet.create({
   tabBar: {
     position: 'absolute',
-    bottom: Platform.OS === 'ios' ? 28 : 20,
-    left: Spacing.xl,
-    right: Spacing.xl,
-    height: 72,
-    borderRadius: 36, // Floating pill
+    bottom: 34,
+    left: '12%',
+    right: '12%',
+    height: 60,
+    borderRadius: 30,
     borderWidth: BorderWidth.thick,
-    paddingHorizontal: Spacing.md,
+    paddingHorizontal: 8,
     paddingBottom: 0,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
     ...Shadows.md,
   },
   iconContainer: {
-    height: 44,
-    minWidth: 44,
-    borderRadius: 22, // Perfect circle
+    height: 42,
+    minWidth: 42,
+    borderRadius: 21,
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: BorderWidth.thick,
@@ -149,10 +153,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     flexDirection: 'row',
     gap: 8,
-    borderRadius: 22, // Expanded pill
+    borderRadius: 22,
   },
   activeText: {
-    fontSize: 15,
-    fontWeight: '800',
+    fontSize: 14,
+    fontWeight: '900',
+    letterSpacing: -0.2,
   },
 });
