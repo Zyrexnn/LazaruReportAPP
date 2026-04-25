@@ -1,4 +1,4 @@
-import { SkeletonBlock } from '@/components/Skeleton';
+import { NewsLoading } from '@/components/NewsLoading';
 import { BentoConfig, BorderWidth, Radius, Shadows, Spacing, Typography } from '@/constants/theme';
 import { useThemeColors, useIsDark } from '@/hooks/use-color-scheme';
 import { NewsCard } from '@/src/components/NewsCard';
@@ -12,8 +12,9 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { ChevronRight, Palette, Search, X } from 'lucide-react-native';
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, TextInput, View, useWindowDimensions } from 'react-native';
+import Animated, { useAnimatedStyle, useSharedValue, withSpring, interpolateColor } from 'react-native-reanimated';
 
 const bookmarkQueryKey = ['bookmarks'];
 const newsQueryKey = ['news-feed'];
@@ -27,20 +28,43 @@ const CATEGORIES = [
   { id: 'startups', label: 'Startups' },
 ];
 
-function NewsSkeleton() {
+function SentimentBento({ value, classification }: { value: number; classification: string }) {
   const colors = useThemeColors();
+  const progress = useSharedValue(0);
+
+  useEffect(() => {
+    progress.value = withSpring(value / 100, { damping: 15 });
+  }, [value]);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    width: `${progress.value * 100}%`,
+    backgroundColor: interpolateColor(
+      progress.value,
+      [0, 0.4, 0.5, 0.6, 1],
+      ['#FF0033', '#FF9900', '#FFCC00', '#99FF00', '#00FF66']
+    ),
+  }));
+
   return (
-    <View style={{ paddingHorizontal: BentoConfig.paddingH, backgroundColor: colors.background, flex: 1, paddingTop: 70 }}>
-      <SkeletonBlock height={28} width={140} radius={Radius.sm} style={{ marginBottom: 8 }} />
-      <SkeletonBlock height={16} width={200} radius={Radius.xs} style={{ marginBottom: 24 }} />
-      <SkeletonBlock height={40} radius={Radius.md} style={{ marginBottom: 24 }} />
-      <SkeletonBlock height={260} radius={Radius.xl} style={{ marginBottom: BentoConfig.gap }} />
-      <View style={{ flexDirection: 'row', gap: BentoConfig.gap }}>
-        <SkeletonBlock height={180} radius={Radius.lg} style={{ flex: 1 }} />
-        <SkeletonBlock height={180} radius={Radius.lg} style={{ flex: 1 }} />
+    <View style={[styles.miniBento, { backgroundColor: colors.surface, borderColor: colors.borderStrong, overflow: 'hidden' }]}>
+      <View style={styles.sentimentLabelRow}>
+        <Text style={[styles.miniBentoLabel, { color: colors.textSecondary }]}>SENTIMENT</Text>
+        <View style={[styles.sentimentIndicator, { 
+          backgroundColor: value < 40 ? '#FF0033' : value < 60 ? '#FFCC00' : '#00FF66' 
+        }]} />
+      </View>
+      <Text style={[styles.miniBentoValue, { fontSize: 16, color: colors.text }]} numberOfLines={1}>
+        {classification.toUpperCase()}
+      </Text>
+      <View style={[styles.sentimentBarBg, { backgroundColor: colors.muted, height: 4, borderRadius: 2, marginTop: 8 }]}>
+        <Animated.View style={[styles.sentimentBarFill, animatedStyle, { height: '100%', borderRadius: 2 }]} />
       </View>
     </View>
   );
+}
+
+function NewsSkeleton() {
+  return <NewsLoading />;
 }
 
 export default function HomeScreen() {
@@ -65,6 +89,20 @@ export default function HomeScreen() {
   const bookmarksQuery = useQuery({
     queryKey: bookmarkQueryKey,
     queryFn: getBookmarks,
+  });
+
+  const sentimentQuery = useQuery({
+    queryKey: ['market-sentiment'],
+    queryFn: async () => {
+      try {
+        const res = await fetch('https://api.alternative.me/fng/');
+        const data = await res.json();
+        return data.data?.[0] ?? { value: '50', value_classification: 'Neutral' };
+      } catch {
+        return { value: '50', value_classification: 'Neutral' };
+      }
+    },
+    refetchInterval: 3600000,
   });
 
   const bookmarkedIds = useMemo(
@@ -264,10 +302,10 @@ export default function HomeScreen() {
 
               {/* Decorative / Stat Tiles */}
               <View style={styles.bentoRow}>
-                <View style={[styles.miniBento, { backgroundColor: '#FFE600', borderColor: colors.borderStrong }]}>
-                  <Text style={styles.miniBentoLabel}>TRENDING</Text>
-                  <Text style={styles.miniBentoValue}>AI REVOLUTION</Text>
-                </View>
+                <SentimentBento 
+                  value={parseInt(sentimentQuery.data?.value ?? '50')} 
+                  classification={sentimentQuery.data?.value_classification ?? 'Neutral'} 
+                />
                 <View style={[styles.miniBento, { backgroundColor: colors.accent, borderColor: colors.borderStrong }]}>
                   <Text style={[styles.miniBentoLabel, { color: '#FFF' }]}>LATEST</Text>
                   <Text style={[styles.miniBentoValue, { color: '#FFF' }]}>{filteredNews.length} UPDATES</Text>
@@ -456,10 +494,34 @@ const styles = StyleSheet.create({
   miniBentoValue: {
     ...Typography.h3,
     fontSize: 16,
-    color: '#000',
     marginTop: 2,
   },
-
+  sentimentLabelRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    width: '100%',
+    marginBottom: 4,
+  },
+  sentimentIndicator: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    borderWidth: 1,
+    borderColor: 'rgba(0,0,0,0.2)',
+  },
+  sentimentBarBg: {
+    width: '100%',
+    height: 6,
+    borderRadius: 3,
+    marginTop: 8,
+    overflow: 'hidden',
+  },
+  sentimentBarFill: {
+    height: '100%',
+    borderRadius: 3,
+  },
+ 
   // ── Content ────────────────────────────────────────────────
   content: {
     paddingHorizontal: BentoConfig.paddingH,
@@ -475,7 +537,7 @@ const styles = StyleSheet.create({
     paddingRight: Spacing.xl,
   },
   sectionHeader: {
-    flexDirection: 'row',
+    lexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     marginBottom: Spacing.md,
@@ -519,4 +581,4 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     maxWidth: '80%',
   },
-});
+}); 
