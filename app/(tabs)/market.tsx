@@ -1,4 +1,4 @@
-import { SkeletonBlock } from '@/components/Skeleton';
+import { NewsLoading } from '@/components/NewsLoading';
 import { BentoConfig, BorderWidth, Radius, Shadows, Spacing, Typography } from '@/constants/theme';
 import { useThemeColors, useIsDark } from '@/hooks/use-color-scheme';
 import { fetchMarketSnapshot } from '@/src/services/newsApi';
@@ -10,24 +10,51 @@ import { StatusBar } from 'expo-status-bar';
 import { Search, TrendingUp, TrendingDown } from 'lucide-react-native';
 import { useMemo, useState, useEffect, useRef } from 'react';
 import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
-import Animated, { useAnimatedStyle, useSharedValue, withSequence, withTiming, interpolateColor } from 'react-native-reanimated';
+import Animated, { useAnimatedStyle, useSharedValue, withSpring, withSequence, withTiming, interpolateColor } from 'react-native-reanimated';
 
-function MarketSkeleton() {
+function SentimentMeter({ value, classification }: { value: number; classification: string }) {
   const colors = useThemeColors();
+  const progress = useSharedValue(0);
+
+  useEffect(() => {
+    progress.value = withSpring(value / 100, { damping: 15 });
+  }, [value]);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    width: `${progress.value * 100}%`,
+    backgroundColor: interpolateColor(
+      progress.value,
+      [0, 0.4, 0.5, 0.6, 1],
+      ['#FF0033', '#FF9900', '#FFCC00', '#99FF00', '#00FF66']
+    ),
+  }));
+
   return (
-    <View style={{ paddingHorizontal: BentoConfig.paddingH, paddingTop: 70, backgroundColor: colors.background, flex: 1 }}>
-      <SkeletonBlock height={28} width={120} radius={Radius.sm} style={{ marginBottom: 8 }} />
-      <SkeletonBlock height={14} width={180} radius={Radius.xs} style={{ marginBottom: 32 }} />
-      <View style={{ flexDirection: 'row', gap: BentoConfig.gap, marginBottom: 24 }}>
-        <SkeletonBlock height={90} radius={Radius.lg} style={{ flex: 1 }} />
-        <SkeletonBlock height={90} radius={Radius.lg} style={{ flex: 1 }} />
+    <View style={styles.sentimentMeterContainer}>
+      <View style={styles.sentimentMeterHeader}>
+        <Text style={[styles.sentimentMeterLabel, { color: colors.textSecondary }]}>Market Sentiment</Text>
+        <Text style={[styles.sentimentMeterValue, { color: colors.text }]}>
+          {classification} ({value})
+        </Text>
       </View>
-      <SkeletonBlock height={44} radius={Radius.md} style={{ marginBottom: 20 }} />
-      {[1, 2, 3, 4].map((i) => (
-        <SkeletonBlock key={i} height={64} radius={Radius.md} style={{ marginBottom: 12 }} />
-      ))}
+      <View style={[styles.meterTrack, { backgroundColor: colors.muted }]}>
+        <Animated.View style={[styles.meterFill, animatedStyle]} />
+      </View>
     </View>
   );
+}
+
+const MARKET_MESSAGES = [
+  'SYNCING TICKER DATA...',
+  'FETCHING ORDER BOOKS...',
+  'CALCULATING VOLATILITY...',
+  'CONNECTING TO EXCHANGES...',
+  'UPDATING PRICE FEEDS...',
+  'PARSING CANDLESTICK DATA...'
+];
+
+function MarketSkeleton() {
+  return <NewsLoading messages={MARKET_MESSAGES} />;
 }
 
 function StatBento({ label, value, sub, color }: { label: string; value: string; sub?: string; color?: string }) {
@@ -161,14 +188,9 @@ export default function MarketScreen() {
 
       {/* ── Header ────────────────────────────────────────────── */}
       <View style={[styles.header, { borderBottomColor: colors.borderStrong }]}>
-        <View>
+        <View style={{ flex: 1 }}>
           <Text style={[styles.headerTitle, { color: colors.text }]}>Markets</Text>
-          <View style={styles.sentimentRow}>
-            <View style={[styles.sentimentDot, { backgroundColor: sentimentValue > 50 ? colors.success : colors.error }]} />
-            <Text style={[styles.sentimentText, { color: colors.textSecondary }]}>
-              {sentiment?.value_classification ?? 'Neutral'} · {sentiment?.value ?? '50'}
-            </Text>
-          </View>
+          <SentimentMeter value={sentimentValue} classification={sentiment?.value_classification ?? 'Neutral'} />
         </View>
       </View>
 
@@ -297,19 +319,38 @@ const styles = StyleSheet.create({
     fontSize: 42,
     lineHeight: 46,
   },
-  sentimentBox: {
-    marginTop: 8,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: 4,
-    borderRadius: Radius.xs,
-    borderWidth: BorderWidth.normal,
-    alignSelf: 'flex-start',
-    ...Shadows.sm,
+  sentimentMeterContainer: {
+    marginTop: 12,
+    width: '100%',
   },
-  sentimentText: {
-    ...Typography.caption,
+  sentimentMeterHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 6,
+  },
+  sentimentMeterLabel: {
+    ...Typography.overline,
+    fontSize: 10,
     fontWeight: '900',
-    letterSpacing: 0.5,
+    letterSpacing: 1,
+  },
+  sentimentMeterValue: {
+    ...Typography.caption,
+    fontSize: 11,
+    fontWeight: '900',
+  },
+  meterTrack: {
+    height: 6,
+    width: '100%',
+    borderRadius: 3,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: 'rgba(0,0,0,0.05)',
+  },
+  meterFill: {
+    height: '100%',
+    borderRadius: 3,
   },
 
   // ── Scroll Content ─────────────────────────────────────────
