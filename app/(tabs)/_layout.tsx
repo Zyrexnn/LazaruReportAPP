@@ -1,7 +1,7 @@
 import { BorderWidth, Radius, Shadows, Spacing } from '@/constants/theme';
 import { useThemeColors, useIsDark } from '@/hooks/use-color-scheme';
 import { Tabs } from 'expo-router';
-import { Bookmark, Compass, TrendingUp, Terminal } from 'lucide-react-native';
+import { Bookmark, Compass, TrendingUp, Terminal, Lightbulb } from 'lucide-react-native';
 import React from 'react';
 import { StyleSheet, View, Platform, Text } from 'react-native';
 
@@ -88,6 +88,34 @@ export default function TabLayout() {
               />
               {focused && (
                 <Text style={[styles.activeText, { color: colors.badgeText }]}>Market</Text>
+              )}
+            </View>
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="ideas"
+        options={{
+          title: 'Ideas',
+          tabBarIcon: ({ color, focused }) => (
+            <View
+              style={[
+                styles.iconContainer,
+                focused && styles.iconContainerActive,
+                {
+                  backgroundColor: focused ? colors.accent : colors.surface,
+                  borderColor: focused ? colors.borderStrong : colors.border,
+                },
+                focused && { transform: [{ translateY: -2 }, { translateX: -2 }], ...Shadows.sm }
+              ]}
+            >
+              <Lightbulb
+                size={22}
+                color={focused ? colors.badgeText : colors.textSecondary}
+                strokeWidth={focused ? 2.5 : 2}
+              />
+              {focused && (
+                <Text style={[styles.activeText, { color: colors.badgeText }]}>Ideas</Text>
               )}
             </View>
           ),
