@@ -1,5 +1,7 @@
 import { BentoConfig, BorderWidth, Radius, Shadows, Spacing, Typography } from '@/constants/theme';
 import { useThemeColors, useIsDark } from '@/hooks/use-color-scheme';
+import { useIsOffline } from '@/hooks/use-network-status';
+import { OfflineGate } from '@/components/OfflineGate';
 import { sendMessageToLazarusWowo, ChatMessage } from '@/src/services/aiApi';
 import { FlashList } from '@shopify/flash-list';
 import { Image } from 'expo-image';
@@ -32,6 +34,7 @@ const COOLDOWN_SECONDS = 5;
 export default function AIScreen() {
   const colors = useThemeColors();
   const isDark = useIsDark();
+  const isOffline = useIsOffline();
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       role: 'model',
@@ -188,7 +191,8 @@ export default function AIScreen() {
           </View>
         </View>
       </View>
-
+      
+      <OfflineGate isOffline={isOffline} message="Neural link severed. The AI core requires an active uplink to process market intelligence.">
       <KeyboardAvoidingView 
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         style={{ flex: 1 }}
@@ -252,6 +256,7 @@ export default function AIScreen() {
           )}
         </View>
       </KeyboardAvoidingView>
+      </OfflineGate>
     </View>
   );
 }

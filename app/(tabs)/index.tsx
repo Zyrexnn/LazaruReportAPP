@@ -1,6 +1,8 @@
 import { NewsLoading } from '@/components/NewsLoading';
 import { BentoConfig, BorderWidth, Radius, Shadows, Spacing, Typography } from '@/constants/theme';
 import { useThemeColors, useIsDark } from '@/hooks/use-color-scheme';
+import { useIsOffline } from '@/hooks/use-network-status';
+import { OfflineGate } from '@/components/OfflineGate';
 import { NewsCard } from '@/src/components/NewsCard';
 import { ThemeSwitcher } from '@/src/components/ThemeSwitcher';
 import { addBookmark, getBookmarks, removeBookmark } from '@/src/services/db';
@@ -73,6 +75,7 @@ export default function HomeScreen() {
   const { setSelectedArticle } = useNewsStore();
   const colors = useThemeColors();
   const isDark = useIsDark();
+  const isOffline = useIsOffline();
   const { width: screenWidth } = useWindowDimensions();
 
   const [category, setCategory] = useState<string>('all');
@@ -271,6 +274,7 @@ export default function HomeScreen() {
       </View>
 
       {/* ── Content ───────────────────────────────────────────── */}
+      <OfflineGate isOffline={isOffline} onRetry={() => newsQuery.refetch()}>
       <FlashList
         data={readLater}
         keyExtractor={(item) => item.id}
@@ -373,6 +377,7 @@ export default function HomeScreen() {
           />
         )}
       />
+      </OfflineGate>
     </View>
   );
 }
