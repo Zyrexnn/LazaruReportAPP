@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import type { ConfigContext, ExpoConfig } from 'expo/config';
 const appJson = require('./app.json');
 
@@ -16,6 +17,8 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       newsApiApiKey: process.env.NEWSAPI_API_KEY,
       marketAuxApiToken: process.env.MARKETAUX_API_TOKEN,
       cmcApiKey: process.env.CMC_API_KEY,
+      geminiApiKey: process.env.GEMINI_API_KEY,
+      deepseekApiKey: process.env.DEEPSEEK_API_KEY,
     },
   },
 });
