@@ -8,6 +8,8 @@ type ApiKeys = {
   newsApiApiKey?: string;
   marketAuxApiToken?: string;
   cmcApiKey?: string;
+  geminiApiKey?: string;
+  deepseekApiKey?: string;
 };
 
 const extra = (Constants.expoConfig?.extra ?? {}) as { apiKeys?: ApiKeys };
@@ -20,6 +22,8 @@ export const env = {
   newsApiApiKey: extra.apiKeys?.newsApiApiKey ?? '',
   marketAuxApiToken: extra.apiKeys?.marketAuxApiToken ?? '',
   cmcApiKey: extra.apiKeys?.cmcApiKey ?? '',
+  geminiApiKey: extra.apiKeys?.geminiApiKey ?? '',
+  deepseekApiKey: extra.apiKeys?.deepseekApiKey ?? '',
 };
 
 export const hasConfiguredKey = (value: string) =>
