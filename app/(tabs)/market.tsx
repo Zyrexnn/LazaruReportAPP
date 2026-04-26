@@ -1,6 +1,8 @@
 import { NewsLoading } from '@/components/NewsLoading';
 import { BentoConfig, BorderWidth, Radius, Shadows, Spacing, Typography } from '@/constants/theme';
 import { useThemeColors, useIsDark } from '@/hooks/use-color-scheme';
+import { useIsOffline } from '@/hooks/use-network-status';
+import { OfflineGate } from '@/components/OfflineGate';
 import { fetchMarketSnapshot } from '@/src/services/newsApi';
 import type { MarketTicker } from '@/src/types/news';
 import { Sparkline } from '@/src/components/Sparkline';
@@ -131,6 +133,7 @@ function MarketRow({ item, onPress }: { item: MarketTicker; onPress: () => void 
 export default function MarketScreen() {
   const colors = useThemeColors();
   const isDark = useIsDark();
+  const isOffline = useIsOffline();
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState<'crypto' | 'stocks'>('crypto');
   const router = useRouter();
@@ -193,7 +196,8 @@ export default function MarketScreen() {
           <SentimentMeter value={sentimentValue} classification={sentiment?.value_classification ?? 'Neutral'} />
         </View>
       </View>
-
+      
+      <OfflineGate isOffline={isOffline} onRetry={() => { marketQuery.refetch(); sentimentQuery.refetch(); }}>
       <ScrollView
         showsVerticalScrollIndicator={false}
         refreshControl={
@@ -301,6 +305,7 @@ export default function MarketScreen() {
 
         <View style={{ height: 100 }} />
       </ScrollView>
+      </OfflineGate>
     </View>
   );
 }

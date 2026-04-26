@@ -1,5 +1,7 @@
 import { BentoConfig, BorderWidth, Radius, Shadows, Spacing, Typography } from '@/constants/theme';
 import { useThemeColors, useIsDark } from '@/hooks/use-color-scheme';
+import { useIsOffline } from '@/hooks/use-network-status';
+import { OfflineGate } from '@/components/OfflineGate';
 import { fetchTradingIdeas } from '@/src/services/ideasApi';
 import type { TradingIdea, IdeaCategory, IdeaType } from '@/src/types/ideas';
 import { useQuery } from '@tanstack/react-query';
@@ -91,6 +93,7 @@ function IdeaCard({ item }: { item: TradingIdea }) {
 export default function IdeasScreen() {
   const colors = useThemeColors();
   const isDark = useIsDark();
+  const isOffline = useIsOffline();
   const [activeCategory, setActiveCategory] = useState<IdeaCategory | 'all'>('all');
   const [activeType, setActiveType] = useState<IdeaType | 'all'>('all');
 
@@ -168,17 +171,18 @@ export default function IdeasScreen() {
         </ScrollView>
       </View>
 
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.scrollContent}
-        refreshControl={
-          <RefreshControl
-            refreshing={ideasQuery.isRefetching}
-            onRefresh={ideasQuery.refetch}
-            tintColor={colors.accent}
-          />
-        }
-      >
+      <OfflineGate isOffline={isOffline} onRetry={() => ideasQuery.refetch()}>
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.scrollContent}
+          refreshControl={
+            <RefreshControl
+              refreshing={ideasQuery.isRefetching}
+              onRefresh={ideasQuery.refetch}
+              tintColor={colors.accent}
+            />
+          }
+        >
         {ideasQuery.isLoading ? (
           <View style={styles.loadingCenter}>
             <ActivityIndicator size="large" color={colors.accent} />
@@ -214,6 +218,7 @@ export default function IdeasScreen() {
         )}
         <View style={{ height: 100 }} />
       </ScrollView>
+      </OfflineGate>
     </View>
   );
 }
