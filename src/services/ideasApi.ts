@@ -1,14 +1,18 @@
 import { TradingIdea, IdeaCategory, IdeaType } from '../types/ideas';
 import { XMLParser } from 'fast-xml-parser';
+import { Platform } from 'react-native';
 
 const TV_FEED_URL = 'https://www.tradingview.com/feed/';
+// Using a reliable public CORS proxy for web
+const PROXY_URL = 'https://api.allorigins.win/raw?url=';
 
 export const fetchTradingIdeas = async (
   category?: IdeaCategory,
   type?: IdeaType
 ): Promise<TradingIdea[]> => {
   try {
-    const response = await fetch(TV_FEED_URL);
+    const url = Platform.OS === 'web' ? `${PROXY_URL}${encodeURIComponent(TV_FEED_URL)}` : TV_FEED_URL;
+    const response = await fetch(url);
     if (!response.ok) throw new Error('Failed to fetch TradingView feed');
     
     const xmlData = await response.text();
@@ -18,7 +22,7 @@ export const fetchTradingIdeas = async (
     });
     const jsonObj = parser.parse(xmlData);
     
-    const items = jsonObj.rss.channel.item;
+    const items = jsonObj?.rss?.channel?.item;
     if (!items) return [];
 
     const rawIdeas = Array.isArray(items) ? items : [items];

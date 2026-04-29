@@ -13,7 +13,7 @@ export const MOCK_NEWS: NewsItem[] = [
     id: '1',
     title: 'BRICS Financial Realignment: A New Global Standard',
     excerpt: 'The BRICS nations are moving towards a unified payment system, challenging the dominance of traditional financial networks.',
-    author: 'Lazarus Intelligence',
+    author: 'Lazarus Report',
     date: '2024-04-21',
     imageUrl: 'https://images.unsplash.com/photo-1611974714658-dc3d17960fc5?q=80&w=2070&auto=format&fit=crop',
     category: 'Finance',

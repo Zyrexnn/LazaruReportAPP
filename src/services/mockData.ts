@@ -5,7 +5,7 @@ export const MOCK_NEWS: NewsArticle[] = [
     id: 'mock-1',
     title: 'Modernizing the Dossier: A Deep Dive into Information Hierarchy',
     source: 'Lazarus Report',
-    summary: 'How intelligence platforms are redefining the way we consume market signals and global news in the digital age.',
+    summary: 'How modern platforms are redefining the way we consume market signals and global news in the digital age.',
     imageUrl: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=1472&auto=format&fit=crop',
     contentUrl: 'https://example.com/1',
     publishedAt: new Date().toISOString(),
@@ -14,7 +14,7 @@ export const MOCK_NEWS: NewsArticle[] = [
   {
     id: 'mock-2',
     title: 'The Rise of Obsidian Design in Fintech Applications',
-    source: 'Design Intelligence',
+    source: 'Design Analysis',
     summary: 'Dark themes are no longer just an aesthetic choice; they are a standard for high-performance dashboards and trading terminals.',
     imageUrl: 'https://images.unsplash.com/photo-1639762681485-074b7f938ba0?q=80&w=1632&auto=format&fit=crop',
     contentUrl: 'https://example.com/2',
