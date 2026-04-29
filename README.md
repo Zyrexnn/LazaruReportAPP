@@ -1,6 +1,6 @@
 # Lazarus Report App
 
-A minimalist news and market intelligence app built with Expo and React Native. Features a clean, zen-inspired design similar to iOS apps.
+A minimalist news and market analysis app built with Expo and React Native. Features a clean, zen-inspired design similar to iOS apps.
 
 ## Features
 
