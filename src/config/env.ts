@@ -10,6 +10,8 @@ type ApiKeys = {
   cmcApiKey?: string;
   geminiApiKey?: string;
   deepseekApiKey?: string;
+  supabaseUrl?: string;
+  supabaseAnonKey?: string;
 };
 
 const extra = (Constants.expoConfig?.extra ?? {}) as { apiKeys?: ApiKeys };
@@ -24,6 +26,8 @@ export const env = {
   cmcApiKey: extra.apiKeys?.cmcApiKey ?? '',
   geminiApiKey: extra.apiKeys?.geminiApiKey ?? '',
   deepseekApiKey: extra.apiKeys?.deepseekApiKey ?? '',
+  supabaseUrl: process.env.VITE_SUPABASE_URL || extra.apiKeys?.supabaseUrl || 'https://qfuzfrhqjlmtdmnpfuub.supabase.co',
+  supabaseAnonKey: process.env.VITE_SUPABASE_PUBLISHABLE_KEY || extra.apiKeys?.supabaseAnonKey || 'sb_publishable_alCpeChSE0nvvfIBxJOiIg_YObJC41y',
 };
 
 export const hasConfiguredKey = (value: string) =>

@@ -1,7 +1,7 @@
 import { BorderWidth, Radius, Shadows, Spacing } from '@/constants/theme';
 import { useThemeColors, useIsDark } from '@/hooks/use-color-scheme';
 import { Tabs } from 'expo-router';
-import { Bookmark, Compass, TrendingUp, Terminal, Lightbulb } from 'lucide-react-native';
+import { Bookmark, Compass, TrendingUp, Terminal, Lightbulb, User } from 'lucide-react-native';
 import React from 'react';
 import { StyleSheet, View, Platform, Text } from 'react-native';
 
@@ -150,9 +150,9 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="bookmarks"
+        name="profile"
         options={{
-          title: 'Saved',
+          title: 'Profile',
           tabBarIcon: ({ color, focused }) => (
             <View
               style={[
@@ -165,13 +165,13 @@ export default function TabLayout() {
                 focused && { transform: [{ translateY: -2 }, { translateX: -2 }], ...Shadows.sm }
               ]}
             >
-              <Bookmark
+              <User
                 size={22}
                 color={focused ? colors.badgeText : colors.textSecondary}
                 strokeWidth={focused ? 2.5 : 2}
               />
               {focused && (
-                <Text style={[styles.activeText, { color: colors.badgeText }]}>Saved</Text>
+                <Text style={[styles.activeText, { color: colors.badgeText }]}>Profile</Text>
               )}
             </View>
           ),
@@ -184,13 +184,13 @@ export default function TabLayout() {
 const styles = StyleSheet.create({
   tabBar: {
     position: 'absolute',
-    bottom: 34,
-    left: '12%',
-    right: '12%',
-    height: 60,
-    borderRadius: 30,
-    borderWidth: BorderWidth.thick,
-    paddingHorizontal: 8,
+    bottom: 30,
+    left: 20,
+    right: 20,
+    height: 70,
+    borderRadius: Radius.xs,
+    borderWidth: BorderWidth.brutalist,
+    paddingHorizontal: 12,
     paddingBottom: 0,
     flexDirection: 'row',
     alignItems: 'center',
@@ -198,9 +198,9 @@ const styles = StyleSheet.create({
     ...Shadows.md,
   },
   iconContainer: {
-    height: 42,
-    minWidth: 42,
-    borderRadius: 21,
+    height: 48,
+    minWidth: 48,
+    borderRadius: Radius.xs,
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: BorderWidth.thick,
@@ -208,12 +208,12 @@ const styles = StyleSheet.create({
   iconContainerActive: {
     paddingHorizontal: 16,
     flexDirection: 'row',
-    gap: 8,
-    borderRadius: 22,
+    gap: 10,
   },
   activeText: {
     fontSize: 14,
     fontWeight: '900',
-    letterSpacing: -0.2,
+    letterSpacing: -0.5,
+    textTransform: 'uppercase',
   },
 });
