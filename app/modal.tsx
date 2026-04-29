@@ -18,7 +18,7 @@ export default function ModalScreen() {
         
         <ThemedText type="title" style={styles.title}>Lazarus Report</ThemedText>
         <ThemedText style={styles.body}>
-          You are viewing the intelligence platform redesign. This modular Bento Grid interface is optimized for high-density information retrieval across all devices.
+          You are viewing the Lazarus Report redesign. This modular Bento Grid interface is optimized for high-density news and market data retrieval across all devices.
         </ThemedText>
 
         <Link href="/" dismissTo asChild>

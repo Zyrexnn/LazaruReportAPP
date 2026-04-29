@@ -194,21 +194,33 @@ export default function HomeScreen() {
           <View style={styles.headerActions}>
             <Pressable
               onPress={() => setShowThemes(!showThemes)}
-              style={[styles.iconBtn, { backgroundColor: colors.surface, borderColor: colors.border }]}
+              hitSlop={12}
+              style={({ pressed }) => [
+                styles.iconBtn, 
+                { backgroundColor: colors.surface, borderColor: colors.borderStrong },
+                !pressed && Shadows.md,
+                pressed && styles.iconBtnPressed
+              ]}
             >
-              <Palette size={18} color={colors.accent} strokeWidth={2} />
+              <Palette size={20} color={colors.accent} strokeWidth={3} />
             </Pressable>
             <Pressable
               onPress={() => {
                 setIsSearching(!isSearching);
                 if (isSearching) setSearchQuery('');
               }}
-              style={[styles.iconBtn, { backgroundColor: colors.surface, borderColor: colors.border }]}
+              hitSlop={12}
+              style={({ pressed }) => [
+                styles.iconBtn, 
+                { backgroundColor: colors.surface, borderColor: colors.borderStrong },
+                !pressed && Shadows.md,
+                pressed && styles.iconBtnPressed
+              ]}
             >
               {isSearching ? (
-                <X size={18} color={colors.text} strokeWidth={2} />
+                <X size={20} color={colors.text} strokeWidth={3} />
               ) : (
-                <Search size={18} color={colors.text} strokeWidth={2} />
+                <Search size={20} color={colors.text} strokeWidth={3} />
               )}
             </Pressable>
           </View>
@@ -420,7 +432,10 @@ const styles = StyleSheet.create({
     borderWidth: BorderWidth.thick,
     justifyContent: 'center',
     alignItems: 'center',
-    ...Shadows.md,
+  },
+  iconBtnPressed: {
+    transform: [{ translateX: 4 }, { translateY: 4 }],
+    ...Shadows.none,
   },
 
   // ── Theme Switcher ─────────────────────────────────────────

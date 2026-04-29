@@ -192,7 +192,7 @@ export default function AIScreen() {
         </View>
       </View>
       
-      <OfflineGate isOffline={isOffline} message="Neural link severed. The AI core requires an active uplink to process market intelligence.">
+      <OfflineGate isOffline={isOffline} message="Connection lost. The AI assistant requires an active connection to process news data.">
       <KeyboardAvoidingView 
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         style={{ flex: 1 }}
@@ -208,7 +208,7 @@ export default function AIScreen() {
             isLoading ? (
               <View style={styles.loadingContainer}>
                 <ActivityIndicator color={colors.accent} />
-                <Text style={[styles.loadingText, { color: colors.textSecondary }]}>ANALYZING MARKET VECTORS...</Text>
+                <Text style={[styles.loadingText, { color: colors.textSecondary }]}>ANALYZING NEWS TRENDS...</Text>
               </View>
             ) : <View style={{ height: 40 }} />
           }
@@ -226,7 +226,7 @@ export default function AIScreen() {
           ]}>
             <TextInput
               style={[styles.textInput, { color: colors.text }]}
-              placeholder={cooldown > 0 ? `Wait ${cooldown}s...` : "Request market intelligence..."}
+              placeholder={cooldown > 0 ? `Wait ${cooldown}s...` : "Ask about the market..."}
               placeholderTextColor={colors.textSecondary}
               value={input}
               onChangeText={setInput}

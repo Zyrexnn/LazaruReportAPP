@@ -1,20 +1,19 @@
-import React, { useEffect, useState } from 'react';
-import { StyleSheet, View, Text, Dimensions } from 'react-native';
-import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-  withTiming,
-  withRepeat,
-  withSequence,
-  withDelay,
-  Easing,
-  runOnJS,
-  interpolate,
-  withSpring,
-} from 'react-native-reanimated';
-import Svg, { Path, G, Rect } from 'react-native-svg';
+import { Colors } from '@/constants/theme';
 import { useThemeStore } from '@/src/store/useThemeStore';
-import { Colors, Typography, Radius } from '@/constants/theme';
+import React, { useEffect, useState } from 'react';
+import { Dimensions, StyleSheet, Text, View } from 'react-native';
+import Animated, {
+    Easing,
+    runOnJS,
+    useAnimatedStyle,
+    useSharedValue,
+    withDelay,
+    withRepeat,
+    withSequence,
+    withSpring,
+    withTiming
+} from 'react-native-reanimated';
+import Svg, { Path } from 'react-native-svg';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -118,8 +117,10 @@ export const BootScreen = ({ onFinish, isReady }: BootScreenProps) => {
   // Separate effect to handle finishing when both conditions are met
   useEffect(() => {
     if (minTimeElapsed && isReady) {
-      opacity.value = withTiming(0, { duration: 600 }, () => {
-        runOnJS(onFinish)();
+      opacity.value = withTiming(0, { duration: 500 }, (finished) => {
+        if (finished) {
+          runOnJS(onFinish)();
+        }
       });
     }
   }, [minTimeElapsed, isReady]);

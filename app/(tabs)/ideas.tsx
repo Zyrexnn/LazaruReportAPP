@@ -121,7 +121,7 @@ export default function IdeasScreen() {
       <View style={[styles.header, { borderBottomColor: colors.borderStrong }]}>
         <View style={styles.headerTop}>
           <View style={{ flex: 1 }}>
-            <Text style={[styles.headerSubtitle, { color: colors.accent }]}>ALPHA INTELLIGENCE</Text>
+            <Text style={[styles.headerSubtitle, { color: colors.accent }]}>MARKET INSIGHTS</Text>
             <Text style={[styles.headerTitle, { color: colors.text }]}>Trade Ideas</Text>
           </View>
           <Image 
@@ -186,7 +186,7 @@ export default function IdeasScreen() {
         {ideasQuery.isLoading ? (
           <View style={styles.loadingCenter}>
             <ActivityIndicator size="large" color={colors.accent} />
-            <Text style={[styles.loadingText, { color: colors.textSecondary }]}>DECODING ALPHA STRATEGIES...</Text>
+            <Text style={[styles.loadingText, { color: colors.textSecondary }]}>ANALYZING MARKET TRENDS...</Text>
           </View>
         ) : (
           <View style={styles.bentoGrid}>
@@ -211,7 +211,7 @@ export default function IdeasScreen() {
                   style={{ width: 80, height: 80, marginBottom: 20 }}
                   contentFit="contain"
                 />
-                <Text style={[styles.emptyText, { color: colors.textSecondary }]}>NO ALPHA DETECTED IN THIS SECTOR</Text>
+                <Text style={[styles.emptyText, { color: colors.textSecondary }]}>NO DATA FOUND IN THIS SECTOR</Text>
               </View>
             )}
           </View>

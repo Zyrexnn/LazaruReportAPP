@@ -63,9 +63,9 @@ function StatBento({ label, value, sub, color }: { label: string; value: string;
   const colors = useThemeColors();
   return (
     <View style={[styles.statBento, { backgroundColor: colors.cardBg, borderColor: colors.borderStrong }]}>
-      <Text style={[styles.statLabel, { color: colors.textSecondary }]}>{label}</Text>
+      <Text style={[styles.statLabel, { color: colors.textSecondary }]}>{label.toUpperCase()}</Text>
       <Text style={[styles.statValue, { color: color || colors.text }]}>{value}</Text>
-      {sub && <Text style={[styles.statSub, { color: colors.textSecondary }]}>{sub}</Text>}
+      {sub && <Text style={[styles.statSub, { color: color || colors.textSecondary }]}>{sub}</Text>}
     </View>
   );
 }
@@ -88,7 +88,6 @@ function MarketRow({ item, onPress }: { item: MarketTicker; onPress: () => void 
     color: interpolateColor(flashValue.value, [-1, 0, 1], [colors.error, colors.text, colors.success])
   }));
 
-  // Unified logic: Red if negative, Green if positive (based on 24h change)
   const isPositive = item.changePercent24h >= 0;
   const statusColor = isPositive ? colors.success : colors.error;
   const badgeBg = isPositive ? 'rgba(0, 255, 102, 0.1)' : 'rgba(255, 0, 51, 0.1)';
@@ -96,9 +95,11 @@ function MarketRow({ item, onPress }: { item: MarketTicker; onPress: () => void 
   return (
     <Pressable
       onPress={onPress}
+      hitSlop={8}
       style={({ pressed }) => [
         styles.row,
         { backgroundColor: colors.cardBg, borderColor: colors.borderStrong },
+        !pressed && Shadows.md,
         pressed && styles.rowPressed,
       ]}
     >
@@ -120,7 +121,7 @@ function MarketRow({ item, onPress }: { item: MarketTicker; onPress: () => void 
         <Animated.Text style={[styles.price, animatedPriceStyle]}>
           ${item.price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: item.price > 100 ? 2 : 4 })}
         </Animated.Text>
-        <View style={[styles.changeBadge, { backgroundColor: badgeBg, borderColor: statusColor }]}>
+        <View style={[styles.changeBadge, { backgroundColor: badgeBg, borderColor: statusColor, borderWidth: BorderWidth.thick }]}>
           <Text style={[styles.changeText, { color: statusColor }]}>
             {isPositive ? '+' : ''}{item.changePercent24h.toFixed(2)}%
           </Text>
@@ -277,7 +278,7 @@ export default function MarketScreen() {
           </View>
         </View>
 
-        {/* ── List Header ─────────────────────────────────────── */}
+            {/* ── List Header ─────────────────────────────────────── */}
         <View style={styles.listHeader}>
           <Text style={[styles.listLabel, { color: colors.textSecondary }]}>Asset</Text>
           <Text style={[styles.listLabel, { color: colors.textSecondary, textAlign: 'center' }]}>7h</Text>

@@ -54,16 +54,16 @@ export function NewsCardComponent({
           pressed && styles.cardPressed,
         ]}
       >
-        <View style={[styles.imageContainer, { borderBottomWidth: BorderWidth.normal }]}>
+        <View style={[styles.imageContainer, { borderBottomWidth: BorderWidth.thick }]}>
           <Image
             source={article.imageUrl || FALLBACK_IMAGE}
             contentFit="cover"
             cachePolicy="memory-disk"
             style={styles.featuredImage}
           />
-          <View style={[styles.sourceBadge, { backgroundColor: colors.badge, borderLeftWidth: BorderWidth.normal, borderBottomWidth: BorderWidth.normal }]}>
-            <Text style={[styles.sourceBadgeText, { color: colors.badgeText }]}>
-              {article.source}
+          <View style={[styles.sourceBadge, { backgroundColor: colors.surfaceElevated, borderLeftWidth: BorderWidth.thick, borderBottomWidth: BorderWidth.thick }]}>
+            <Text style={[styles.sourceBadgeText, { color: '#000' }]}>
+              {article.source.toUpperCase()}
             </Text>
           </View>
         </View>
@@ -73,10 +73,10 @@ export function NewsCardComponent({
             <View style={styles.metaRow}>
               <Clock3 size={12} color={colors.textSecondary} strokeWidth={3} />
               <Text style={[styles.metaText, { color: colors.textSecondary }]}>
-                {timeAgo(article.publishedAt)}
+                {timeAgo(article.publishedAt).toUpperCase()}
               </Text>
             </View>
-            {onToggleBookmark ? (
+            {onToggleBookmark && (
               <Pressable
                 hitSlop={12}
                 onPress={(e) => {
@@ -85,16 +85,16 @@ export function NewsCardComponent({
                 }}
                 style={[
                   styles.bookmarkCircle,
-                  { backgroundColor: colors.surface, borderColor: colors.border },
+                  { backgroundColor: isBookmarked ? colors.accent : colors.surface, borderColor: colors.borderStrong },
                 ]}
               >
                 {isBookmarked ? (
-                  <BookmarkCheck size={18} color={colors.accent} strokeWidth={3} />
+                  <BookmarkCheck size={18} color="#FFF" strokeWidth={3} />
                 ) : (
                   <Bookmark size={18} color={colors.text} strokeWidth={2.5} />
                 )}
               </Pressable>
-            ) : null}
+            )}
           </View>
 
           <Text numberOfLines={3} style={[styles.featuredTitle, { color: colors.text }]}>
@@ -114,7 +114,7 @@ export function NewsCardComponent({
           styles.compactCard,
           {
             backgroundColor: colors.cardBg,
-            borderColor: colors.cardBorder,
+            borderColor: colors.borderStrong,
           },
           !pressed && Shadows.sm,
           pressed && styles.cardPressed,
@@ -126,10 +126,10 @@ export function NewsCardComponent({
           cachePolicy="memory-disk"
           style={styles.compactImage}
         />
-        <View style={[styles.compactContent, { borderTopWidth: BorderWidth.thin }]}>
+        <View style={[styles.compactContent, { borderTopWidth: BorderWidth.thick }]}>
           <View style={styles.compactHeader}>
             <Text style={[styles.compactSource, { color: colors.accent }]}>
-              {article.source}
+              {article.source.toUpperCase()}
             </Text>
             {onToggleBookmark && (
               <Pressable
@@ -163,7 +163,7 @@ export function NewsCardComponent({
         styles.card,
         {
           backgroundColor: colors.cardBg,
-          borderColor: colors.cardBorder,
+          borderColor: colors.borderStrong,
         },
         !pressed && Shadows.sm,
         pressed && styles.cardPressed,
@@ -172,7 +172,7 @@ export function NewsCardComponent({
       <View style={styles.cardContent}>
         <View style={styles.textContent}>
           <View style={styles.cardHeader}>
-            <Text style={[styles.source, { color: colors.accent }]}>{article.source}</Text>
+            <Text style={[styles.source, { color: colors.accent }]}>{article.source.toUpperCase()}</Text>
             {onToggleBookmark && (
               <Pressable
                 hitSlop={12}
@@ -196,13 +196,13 @@ export function NewsCardComponent({
 
           <View style={styles.metaRow}>
             <Text style={[styles.metaText, { color: colors.textSecondary }]}>
-              {timeAgo(article.publishedAt)}
+              {timeAgo(article.publishedAt).toUpperCase()}
             </Text>
           </View>
         </View>
 
         {article.imageUrl ? (
-          <View style={[styles.thumbnailContainer, { borderColor: colors.border, borderWidth: BorderWidth.thin }]}>
+          <View style={[styles.thumbnailContainer, { borderColor: colors.borderStrong, borderWidth: BorderWidth.thick }]}>
             <Image
               source={article.imageUrl}
               contentFit="cover"
@@ -224,10 +224,11 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.lg,
     borderRadius: Radius.xs,
     borderWidth: BorderWidth.thick,
-    overflow: 'visible', // For shadows
+    overflow: 'visible',
   },
   cardPressed: {
-    transform: [{ translateX: 2 }, { translateY: 2 }],
+    transform: [{ translateX: 3 }, { translateY: 3 }],
+    ...Shadows.none,
   },
   cardContent: {
     flexDirection: 'row',
@@ -250,24 +251,23 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   thumbnail: {
-    width: 80,
-    height: 80,
+    width: 90,
+    height: 90,
   },
 
   // ── Featured Card ──────────────────────────────────────────
   featuredCard: {
     borderRadius: Radius.xs,
     borderWidth: BorderWidth.thick,
-    overflow: 'visible', // For shadows
+    overflow: 'visible',
     marginBottom: Spacing.xl,
   },
   imageContainer: {
     position: 'relative',
-    height: 220,
+    height: 240,
     overflow: 'hidden',
     borderTopLeftRadius: Radius.xs,
     borderTopRightRadius: Radius.xs,
-    borderBottomWidth: BorderWidth.thick,
   },
   featuredImage: {
     width: '100%',
@@ -296,30 +296,32 @@ const styles = StyleSheet.create({
     fontWeight: '900',
   },
   bookmarkCircle: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    borderWidth: BorderWidth.normal,
+    width: 44,
+    height: 44,
+    borderRadius: Radius.xs,
+    borderWidth: BorderWidth.thick,
     justifyContent: 'center',
     alignItems: 'center',
   },
   featuredTitle: {
     ...Typography.h1,
-    fontSize: 24,
-    lineHeight: 30,
+    fontSize: 26,
+    lineHeight: 32,
+    fontWeight: '900',
   },
 
   // ── Compact Card ───────────────────────────────────────────
   compactCard: {
-    width: 200,
+    width: 220,
     marginRight: Spacing.xl,
     borderRadius: Radius.xs,
-    overflow: 'visible', // For shadows
+    overflow: 'visible',
     borderWidth: BorderWidth.thick,
+    marginBottom: Spacing.md,
   },
   compactImage: {
     width: '100%',
-    height: 110,
+    height: 120,
     borderTopLeftRadius: Radius.xs,
     borderTopRightRadius: Radius.xs,
     borderBottomWidth: BorderWidth.thick,
@@ -328,11 +330,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 2,
+    marginBottom: 4,
   },
   compactContent: {
     padding: Spacing.md,
-    gap: 4,
+    gap: 6,
   },
   compactSource: {
     ...Typography.overline,
@@ -340,9 +342,9 @@ const styles = StyleSheet.create({
     fontWeight: '900',
   },
   compactTitle: {
-    fontSize: 15,
-    lineHeight: 19,
-    fontWeight: '800',
+    fontSize: 16,
+    lineHeight: 20,
+    fontWeight: '900',
     letterSpacing: -0.3,
   },
 
@@ -354,9 +356,9 @@ const styles = StyleSheet.create({
   },
   title: {
     ...Typography.h3,
-    fontSize: 18,
-    lineHeight: 22,
-    fontWeight: '800',
+    fontSize: 19,
+    lineHeight: 24,
+    fontWeight: '900',
   },
   metaRow: {
     flexDirection: 'row',
@@ -365,7 +367,8 @@ const styles = StyleSheet.create({
   },
   metaText: {
     ...Typography.caption,
-    fontSize: 12,
-    fontWeight: '700',
+    fontSize: 11,
+    fontWeight: '900',
+    letterSpacing: 1,
   },
 });

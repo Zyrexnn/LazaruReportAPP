@@ -26,7 +26,7 @@ export function OfflineGate({ isOffline, children, onRetry, message }: OfflineGa
         
         <Text style={[styles.title, { color: colors.text }]}>CONNECTION LOST</Text>
         <Text style={[styles.message, { color: colors.textSecondary }]}>
-          {message || "The neural link has been severed. This feature requires an active uplink to fetch real-time intelligence."}
+          {message || "Connection lost. This feature requires an active connection to fetch real-time data."}
         </Text>
 
         <Pressable

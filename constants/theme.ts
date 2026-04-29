@@ -332,34 +332,54 @@ export const Typography = {
 // ─── Shadows (Neo-Brutalist: Hard, Offset, Black) ────────────
 export const Shadows = Platform.select({
   web: {
-    sm: { boxShadow: '2px 2px 0px 0px #000' },
-    md: { boxShadow: '4px 4px 0px 0px #000' },
-    lg: { boxShadow: '8px 8px 0px 0px #000' },
+    sm: { 
+      boxShadow: '3px 3px 0px 0px #000',
+      borderWidth: 2,
+    },
+    md: { 
+      boxShadow: '6px 6px 0px 0px #000',
+      borderWidth: 3,
+    },
+    lg: { 
+      boxShadow: '10px 10px 0px 0px #000',
+      borderWidth: 4,
+    },
+    none: {
+      boxShadow: '0px 0px 0px 0px #000',
+    }
   },
   default: {
     sm: {
       shadowColor: '#000',
-      shadowOffset: { width: 2, height: 2 },
+      shadowOffset: { width: 3, height: 3 },
       shadowOpacity: 1,
       shadowRadius: 0,
-      elevation: 3,
+      elevation: 4,
+      borderWidth: 2,
     },
     md: {
-      shadowColor: '#000',
-      shadowOffset: { width: 4, height: 4 },
-      shadowOpacity: 1,
-      shadowRadius: 0,
-      elevation: 6,
-    },
-    lg: {
       shadowColor: '#000',
       shadowOffset: { width: 6, height: 6 },
       shadowOpacity: 1,
       shadowRadius: 0,
-      elevation: 10,
+      elevation: 8,
+      borderWidth: 3,
     },
+    lg: {
+      shadowColor: '#000',
+      shadowOffset: { width: 10, height: 10 },
+      shadowOpacity: 1,
+      shadowRadius: 0,
+      elevation: 12,
+      borderWidth: 4,
+    },
+    none: {
+      shadowOpacity: 0,
+      elevation: 0,
+      borderWidth: 0,
+    }
   },
-}) as Record<'sm' | 'md' | 'lg', any>;
+}) as Record<'sm' | 'md' | 'lg' | 'none', any>;
 
 
 // ─── Bento Grid Config ───────────────────────────────────────
