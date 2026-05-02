@@ -4,7 +4,8 @@ import { useAuthStore } from '@/src/store/useAuthStore';
 import { supabase } from '@/src/services/supabase';
 import { Colors, Spacing, Typography, Shadows, Radius, BorderWidth } from '@/constants/theme';
 import { useThemeStore } from '@/src/store/useThemeStore';
-import { User, Key, Save, LogOut, Shield, Settings } from 'lucide-react-native';
+import { User, Key, Save, LogOut, Shield, Settings, LayoutDashboard } from 'lucide-react-native';
+import AdminDashboard from '@/components/AdminDashboard';
 
 export default function ProfileScreen() {
   const { themeName } = useThemeStore();
@@ -38,8 +39,12 @@ export default function ProfileScreen() {
   return (
     <ScrollView style={[styles.container, { backgroundColor: theme.background }]}>
       <View style={styles.header}>
-        <Text style={[styles.headerTitle, { color: theme.text }]}>Settings</Text>
-        <Text style={[styles.headerSubtitle, { color: theme.accent }]}>ACCOUNT MANAGEMENT</Text>
+        <Text style={[styles.headerTitle, { color: theme.text }]}>
+          {user?.is_admin ? 'Admin Profile' : 'Settings'}
+        </Text>
+        <Text style={[styles.headerSubtitle, { color: theme.accent }]}>
+          {user?.is_admin ? 'SUPERUSER MANAGEMENT' : 'ACCOUNT MANAGEMENT'}
+        </Text>
       </View>
 
       <View style={styles.bentoGrid}>
@@ -93,6 +98,8 @@ export default function ProfileScreen() {
             This token is your unique access key. Keep it secure.
           </Text>
         </View>
+
+        {user?.is_admin ? <AdminDashboard /> : null}
 
         {/* Logout */}
         <Pressable 
@@ -212,6 +219,21 @@ const styles = StyleSheet.create({
     gap: Spacing.md,
   },
   logoutText: {
+    fontSize: 18,
+    fontWeight: '900',
+    letterSpacing: 1,
+  },
+  adminCard: {
+    height: 80,
+    borderWidth: BorderWidth.thick,
+    borderRadius: Radius.xs,
+    justifyContent: 'center',
+    alignItems: 'center',
+    flexDirection: 'row',
+    gap: Spacing.md,
+    marginBottom: Spacing.sm,
+  },
+  adminText: {
     fontSize: 18,
     fontWeight: '900',
     letterSpacing: 1,
