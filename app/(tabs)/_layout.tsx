@@ -14,15 +14,12 @@ export default function TabLayout() {
   const insets = useSafeAreaInsets();
   
   const isCompact = width < 380;
-  const tabBarHorizontal = width < 360 ? Spacing.sm : width < 420 ? Spacing.md : Spacing.lg;
-  const tabBarBottom = Math.max(insets.bottom + Spacing.sm, Spacing.lg);
   
-  // Adjusted sizes for 6-tab layout
-  const tabBarHeight = isCompact ? 60 : 68;
-  const iconBoxHeight = isCompact ? 40 : 44;
-  const iconSize = isCompact ? 18 : 20;
-  const activeLabelSize = isCompact ? 11 : 12;
-  const activeLabelSpacing = isCompact ? 4 : 6;
+  // Brutalist constants
+  const tabBarHeight = 70;
+  const itemWidth = 46; 
+  const itemHeight = 56;
+  const iconSize = 22;
 
   return (
     <Tabs
@@ -34,24 +31,18 @@ export default function TabLayout() {
         tabBarStyle: [
           styles.tabBar,
           {
-            backgroundColor: colors.tabBg,
+            backgroundColor: colors.surface,
             borderColor: colors.borderStrong,
-            left: tabBarHorizontal,
-            right: tabBarHorizontal,
-            bottom: tabBarBottom,
-            height: tabBarHeight,
+            paddingBottom: insets.bottom > 0 ? insets.bottom : 0,
+            height: tabBarHeight + (insets.bottom > 0 ? insets.bottom : 0),
           },
         ],
         tabBarShowLabel: false,
-        tabBarSafeAreaInsets: { bottom: insets.bottom },
         tabBarItemStyle: {
-          height: tabBarHeight - 10,
+          flex: 1,
           justifyContent: 'center',
           alignItems: 'center',
         },
-        tabBarBackground: () => (
-          <View style={{ flex: 1, backgroundColor: 'transparent' }} />
-        ),
       }}
     >
       <Tabs.Screen
@@ -59,26 +50,25 @@ export default function TabLayout() {
         options={{
           title: 'News',
           tabBarIcon: ({ focused }) => (
-            <View
-              style={[
-                styles.iconContainer,
-                focused && styles.iconContainerActive,
-                {
-                  height: iconBoxHeight,
-                  backgroundColor: focused ? colors.accent : colors.surface,
-                  borderColor: focused ? colors.borderStrong : colors.border,
-                },
-                focused && { gap: activeLabelSpacing },
-                focused && { transform: [{ translateY: -2 }, { translateX: -2 }], ...Shadows.sm }
-              ]}
-            >
+            <View style={[
+              styles.iconBox,
+              { width: itemWidth, height: itemHeight },
+              focused && {
+                backgroundColor: colors.accent,
+                borderWidth: BorderWidth.thick,
+                borderColor: colors.borderStrong,
+                ...Shadows.sm
+              }
+            ]}>
               <Compass
                 size={iconSize}
                 color={focused ? colors.badgeText : colors.textSecondary}
                 strokeWidth={focused ? 2.5 : 2}
               />
               {focused && (
-                <Text style={[styles.activeText, { color: colors.badgeText, fontSize: activeLabelSize }]}>News</Text>
+                <Text style={[styles.activeText, { color: colors.badgeText }]} numberOfLines={1} adjustsFontSizeToFit>
+                  NEWS
+                </Text>
               )}
             </View>
           ),
@@ -89,26 +79,25 @@ export default function TabLayout() {
         options={{
           title: 'Market',
           tabBarIcon: ({ focused }) => (
-            <View
-              style={[
-                styles.iconContainer,
-                focused && styles.iconContainerActive,
-                {
-                  height: iconBoxHeight,
-                  backgroundColor: focused ? colors.accent : colors.surface,
-                  borderColor: focused ? colors.borderStrong : colors.border,
-                },
-                focused && { gap: activeLabelSpacing },
-                focused && { transform: [{ translateY: -2 }, { translateX: -2 }], ...Shadows.sm }
-              ]}
-            >
+            <View style={[
+              styles.iconBox,
+              { width: itemWidth, height: itemHeight },
+              focused && {
+                backgroundColor: colors.accent,
+                borderWidth: BorderWidth.thick,
+                borderColor: colors.borderStrong,
+                ...Shadows.sm
+              }
+            ]}>
               <TrendingUp
                 size={iconSize}
                 color={focused ? colors.badgeText : colors.textSecondary}
                 strokeWidth={focused ? 2.5 : 2}
               />
               {focused && (
-                <Text style={[styles.activeText, { color: colors.badgeText, fontSize: activeLabelSize }]}>Market</Text>
+                <Text style={[styles.activeText, { color: colors.badgeText }]} numberOfLines={1} adjustsFontSizeToFit>
+                  MRKT
+                </Text>
               )}
             </View>
           ),
@@ -119,26 +108,25 @@ export default function TabLayout() {
         options={{
           title: 'Ideas',
           tabBarIcon: ({ focused }) => (
-            <View
-              style={[
-                styles.iconContainer,
-                focused && styles.iconContainerActive,
-                {
-                  height: iconBoxHeight,
-                  backgroundColor: focused ? colors.accent : colors.surface,
-                  borderColor: focused ? colors.borderStrong : colors.border,
-                },
-                focused && { gap: activeLabelSpacing },
-                focused && { transform: [{ translateY: -2 }, { translateX: -2 }], ...Shadows.sm }
-              ]}
-            >
+            <View style={[
+              styles.iconBox,
+              { width: itemWidth, height: itemHeight },
+              focused && {
+                backgroundColor: colors.accent,
+                borderWidth: BorderWidth.thick,
+                borderColor: colors.borderStrong,
+                ...Shadows.sm
+              }
+            ]}>
               <Lightbulb
                 size={iconSize}
                 color={focused ? colors.badgeText : colors.textSecondary}
                 strokeWidth={focused ? 2.5 : 2}
               />
               {focused && (
-                <Text style={[styles.activeText, { color: colors.badgeText, fontSize: activeLabelSize }]}>Ideas</Text>
+                <Text style={[styles.activeText, { color: colors.badgeText }]} numberOfLines={1} adjustsFontSizeToFit>
+                  IDEA
+                </Text>
               )}
             </View>
           ),
@@ -149,26 +137,25 @@ export default function TabLayout() {
         options={{
           title: 'AI',
           tabBarIcon: ({ focused }) => (
-            <View
-              style={[
-                styles.iconContainer,
-                focused && styles.iconContainerActive,
-                {
-                  height: iconBoxHeight,
-                  backgroundColor: focused ? colors.accent : colors.surface,
-                  borderColor: focused ? colors.borderStrong : colors.border,
-                },
-                focused && { gap: activeLabelSpacing },
-                focused && { transform: [{ translateY: -2 }, { translateX: -2 }], ...Shadows.sm }
-              ]}
-            >
+            <View style={[
+              styles.iconBox,
+              { width: itemWidth, height: itemHeight },
+              focused && {
+                backgroundColor: colors.accent,
+                borderWidth: BorderWidth.thick,
+                borderColor: colors.borderStrong,
+                ...Shadows.sm
+              }
+            ]}>
               <Terminal
                 size={iconSize}
                 color={focused ? colors.badgeText : colors.textSecondary}
                 strokeWidth={focused ? 2.5 : 2}
               />
               {focused && (
-                <Text style={[styles.activeText, { color: colors.badgeText, fontSize: activeLabelSize }]}>AI</Text>
+                <Text style={[styles.activeText, { color: colors.badgeText }]} numberOfLines={1} adjustsFontSizeToFit>
+                  CHAT
+                </Text>
               )}
             </View>
           ),
@@ -179,26 +166,25 @@ export default function TabLayout() {
         options={{
           title: 'Saved',
           tabBarIcon: ({ focused }) => (
-            <View
-              style={[
-                styles.iconContainer,
-                focused && styles.iconContainerActive,
-                {
-                  height: iconBoxHeight,
-                  backgroundColor: focused ? colors.accent : colors.surface,
-                  borderColor: focused ? colors.borderStrong : colors.border,
-                },
-                focused && { gap: activeLabelSpacing },
-                focused && { transform: [{ translateY: -2 }, { translateX: -2 }], ...Shadows.sm }
-              ]}
-            >
+            <View style={[
+              styles.iconBox,
+              { width: itemWidth, height: itemHeight },
+              focused && {
+                backgroundColor: colors.accent,
+                borderWidth: BorderWidth.thick,
+                borderColor: colors.borderStrong,
+                ...Shadows.sm
+              }
+            ]}>
               <Bookmark
                 size={iconSize}
                 color={focused ? colors.badgeText : colors.textSecondary}
                 strokeWidth={focused ? 2.5 : 2}
               />
               {focused && (
-                <Text style={[styles.activeText, { color: colors.badgeText, fontSize: activeLabelSize }]}>Saved</Text>
+                <Text style={[styles.activeText, { color: colors.badgeText }]} numberOfLines={1} adjustsFontSizeToFit>
+                  SAVE
+                </Text>
               )}
             </View>
           ),
@@ -209,26 +195,25 @@ export default function TabLayout() {
         options={{
           title: 'Me',
           tabBarIcon: ({ focused }) => (
-            <View
-              style={[
-                styles.iconContainer,
-                focused && styles.iconContainerActive,
-                {
-                  height: iconBoxHeight,
-                  backgroundColor: focused ? colors.accent : colors.surface,
-                  borderColor: focused ? colors.borderStrong : colors.border,
-                },
-                focused && { gap: activeLabelSpacing },
-                focused && { transform: [{ translateY: -2 }, { translateX: -2 }], ...Shadows.sm }
-              ]}
-            >
+            <View style={[
+              styles.iconBox,
+              { width: itemWidth, height: itemHeight },
+              focused && {
+                backgroundColor: colors.accent,
+                borderWidth: BorderWidth.thick,
+                borderColor: colors.borderStrong,
+                ...Shadows.sm
+              }
+            ]}>
               <User
                 size={iconSize}
                 color={focused ? colors.badgeText : colors.textSecondary}
                 strokeWidth={focused ? 2.5 : 2}
               />
               {focused && (
-                <Text style={[styles.activeText, { color: colors.badgeText, fontSize: activeLabelSize }]}>Me</Text>
+                <Text style={[styles.activeText, { color: colors.badgeText }]} numberOfLines={1} adjustsFontSizeToFit>
+                  ME
+                </Text>
               )}
             </View>
           ),
@@ -241,31 +226,26 @@ export default function TabLayout() {
 const styles = StyleSheet.create({
   tabBar: {
     position: 'absolute',
-    borderRadius: Radius.xs,
-    borderWidth: BorderWidth.brutalist,
-    paddingHorizontal: 8,
-    paddingBottom: 0,
+    borderTopWidth: BorderWidth.brutalist,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    ...Shadows.md,
+    elevation: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
   },
-  iconContainer: {
-    height: 44,
-    minWidth: 40,
-    borderRadius: Radius.xs,
+  iconBox: {
     justifyContent: 'center',
     alignItems: 'center',
-    borderWidth: BorderWidth.thick,
-  },
-  iconContainerActive: {
-    paddingHorizontal: 10,
-    flexDirection: 'row',
+    borderRadius: Radius.xs,
+    padding: 2,
+    gap: 2,
   },
   activeText: {
-    fontSize: 12,
+    fontSize: 9,
     fontWeight: '900',
     letterSpacing: -0.5,
-    textTransform: 'uppercase',
   },
 });

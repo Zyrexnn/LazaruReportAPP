@@ -94,11 +94,7 @@ export default function RootLayout() {
       }
     } else if (isAuthenticated) {
       if (isLoginPage) {
-        if (user?.is_admin) {
-          router.replace('/admin');
-        } else {
-          router.replace('/(tabs)');
-        }
+        router.replace('/(tabs)');
       }
     }
   }, [isAuthenticated, segments, isBooting]);
