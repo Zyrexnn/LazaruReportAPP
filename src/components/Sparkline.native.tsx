@@ -4,8 +4,8 @@ import { View } from 'react-native';
 export function Sparkline({
   data,
   color,
-  width = 110,
-  height = 56,
+  width = 72,
+  height = 30,
 }: {
   data: { timestamp: number; value: number }[];
   color: string;
@@ -15,18 +15,22 @@ export function Sparkline({
   if (!data || data.length === 0) {
     return (
       <View style={{ width, height, justifyContent: 'center' }}>
-        <View style={{ height: 2, backgroundColor: color, opacity: 0.3, width: '100%' }} />
+        <View style={{ height: 2, backgroundColor: color, opacity: 0.2, width: '100%', borderRadius: 1 }} />
       </View>
     );
   }
 
   return (
-    <View style={{ width, height, overflow: 'hidden' }}>
+    <View style={{ width, height }}>
       <LineChart.Provider data={data}>
         <LineChart height={height} width={width}>
-          <LineChart.Path color={color} width={2} />
+          <LineChart.Path 
+            color={color} 
+            width={2.5} 
+          />
         </LineChart>
       </LineChart.Provider>
     </View>
   );
 }
+

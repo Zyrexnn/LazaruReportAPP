@@ -293,7 +293,7 @@ export const fetchUnifiedNews = async (query = DEFAULT_QUERY) => {
 
 const buildSparkline = (prices: number[]) =>
   prices.map((value, index) => ({
-    timestamp: Date.now() - (prices.length - index) * 60 * 60 * 1000,
+    timestamp: Date.now() - (prices.length - index) * 30 * 60 * 1000,
     value,
   }));
 
@@ -313,13 +313,13 @@ export const fetchMarketSnapshot = async (): Promise<MarketTicker[]> => {
 
   try {
     // Fetch crypto data from Binance in BULK (much faster and avoids rate limits)
-    const [allBinancePrices, cryptoKlines] = await Promise.all([
-      fetchJson<any[]>('https://api.binance.com/api/v3/ticker/price'),
+    const [binanceTickers, cryptoKlines] = await Promise.all([
+      fetchJson<any[]>(`https://api.binance.com/api/v3/ticker/24hr?symbols=${JSON.stringify(cryptoSymbols)}`),
       Promise.all(
         cryptoSymbols.slice(0, 15).map(async (symbol) => { // Only get klines for top 15 to save requests
           try {
             const response = await fetchJson<any[]>(
-              `https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=1h&limit=24`
+              `https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=30m&limit=48`
             );
             return { symbol, prices: response.map((entry) => Number(entry[4])) };
           } catch (error) {
@@ -329,27 +329,27 @@ export const fetchMarketSnapshot = async (): Promise<MarketTicker[]> => {
       ),
     ]);
 
-    const priceMap = new Map(allBinancePrices.map(p => [p.symbol, p.price]));
+    const tickerMap = new Map(binanceTickers.map(t => [t.symbol, t]));
 
     const cryptoKlineMap = new Map(
       cryptoKlines.map((entry) => [entry.symbol, buildSparkline(entry.prices)])
     );
 
     const cryptoTickers = cryptoSymbols.map((symbol) => {
-      const price = priceMap.get(symbol);
-      if (!price) return null;
+      const ticker = tickerMap.get(symbol);
+      if (!ticker) return null;
       
       return {
         id: symbol,
         symbol: symbol.replace('USDT', ''),
         name: symbol.replace('USDT', ''),
-        price: Number(price),
-        changePercent24h: 0, // Bulk price endpoint doesn't have 24h change, but we save 40 requests
+        price: Number(ticker.lastPrice),
+        changePercent24h: Number(ticker.priceChangePercent),
         sparkline: cryptoKlineMap.get(symbol) ?? [],
         type: 'crypto' as const,
-        volume24h: 0,
-        high24h: Number(price),
-        low24h: Number(price),
+        volume24h: Number(ticker.volume),
+        high24h: Number(ticker.highPrice),
+        low24h: Number(ticker.lowPrice),
       };
     }).filter((t): t is NonNullable<typeof t> => t !== null);
 

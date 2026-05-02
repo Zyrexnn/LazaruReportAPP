@@ -190,14 +190,6 @@ export default function MarketScreen() {
     <View style={{ flex: 1, backgroundColor: colors.background }}>
       <StatusBar style={isDark ? 'light' : 'dark'} />
 
-      {/* ── Header ────────────────────────────────────────────── */}
-      <View style={[styles.header, { borderBottomColor: colors.borderStrong }]}>
-        <View style={{ flex: 1 }}>
-          <Text style={[styles.headerTitle, { color: colors.text }]}>Markets</Text>
-          <SentimentMeter value={sentimentValue} classification={sentiment?.value_classification ?? 'Neutral'} />
-        </View>
-      </View>
-      
       <OfflineGate isOffline={isOffline} onRetry={() => { marketQuery.refetch(); sentimentQuery.refetch(); }}>
       <ScrollView
         showsVerticalScrollIndicator={false}
@@ -209,6 +201,14 @@ export default function MarketScreen() {
           />
         }
       >
+        {/* ── Header ────────────────────────────────────────────── */}
+        <View style={[styles.header, { borderBottomColor: colors.borderStrong }]}>
+          <View style={{ flex: 1 }}>
+            <Text style={[styles.headerTitle, { color: colors.text }]}>Markets</Text>
+            <SentimentMeter value={sentimentValue} classification={sentiment?.value_classification ?? 'Neutral'} />
+          </View>
+        </View>
+
         {/* ── Bento Stat Cards ────────────────────────────────── */}
         <View style={styles.bentoRow}>
           {topGainer && (
@@ -281,7 +281,7 @@ export default function MarketScreen() {
             {/* ── List Header ─────────────────────────────────────── */}
         <View style={styles.listHeader}>
           <Text style={[styles.listLabel, { color: colors.textSecondary }]}>Asset</Text>
-          <Text style={[styles.listLabel, { color: colors.textSecondary, textAlign: 'center' }]}>7h</Text>
+          <Text style={[styles.listLabel, { color: colors.textSecondary, textAlign: 'center' }]}>24h</Text>
           <Text style={[styles.listLabel, { color: colors.textSecondary, textAlign: 'right' }]}>Price</Text>
         </View>
 
@@ -315,10 +315,9 @@ const styles = StyleSheet.create({
   // ── Header ─────────────────────────────────────────────────
   header: {
     paddingHorizontal: BentoConfig.paddingH,
-    paddingTop: 60,
+    paddingTop: Spacing.xl,
     paddingBottom: Spacing.md,
     borderBottomWidth: BorderWidth.thick,
-    borderBottomColor: '#000',
   },
   headerTitle: {
     ...Typography.display,
@@ -462,8 +461,9 @@ const styles = StyleSheet.create({
   },
   assetCount: {
     ...Typography.caption,
-    fontSize: 11,
-    marginTop: Spacing.xs,
+    fontSize: 10,
+    fontWeight: '900',
+    marginTop: -Spacing.xs,
   },
 
   // ── List ───────────────────────────────────────────────────
