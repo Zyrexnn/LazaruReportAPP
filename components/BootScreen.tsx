@@ -1,21 +1,10 @@
 import { Colors } from '@/constants/theme';
 import { useThemeStore } from '@/src/store/useThemeStore';
-import React, { useEffect, useState } from 'react';
-import { Dimensions, StyleSheet, Text, View } from 'react-native';
-import Animated, {
-    Easing,
-    runOnJS,
-    useAnimatedStyle,
-    useSharedValue,
-    withDelay,
-    withRepeat,
-    withSequence,
-    withSpring,
-    withTiming
-} from 'react-native-reanimated';
+import React, { useEffect, useState, useRef } from 'react';
+import { Dimensions, StyleSheet, Text, View, useWindowDimensions, Platform, Animated } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 
-const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
+const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 const AnimatedPath = Animated.createAnimatedComponent(Path);
 
@@ -30,16 +19,16 @@ const STAR_PATH = "M24.9778 49C26.5743 49 27.8824 47.825 28.1041 46.162C30.299 3
 export const BootScreen = ({ onFinish, isReady }: BootScreenProps) => {
   const { themeName } = useThemeStore();
   const theme = Colors[themeName];
+  const { width: windowWidth } = useWindowDimensions();
+  const SCREEN_WIDTH = windowWidth || 375;
 
-  // Animation values
-  const opacity = useSharedValue(1);
-  const scale = useSharedValue(0.8);
-  const rotation = useSharedValue(0);
-  const marqueeX = useSharedValue(0);
-  const glitchY = useSharedValue(0);
-  const logoProgress = useSharedValue(0);
-  const boxWidth = useSharedValue(0);
-  const contentOpacity = useSharedValue(0);
+  // Standard Animated values
+  const fadeAnim = useRef(new Animated.Value(1)).current;
+  const scaleAnim = useRef(new Animated.Value(0.8)).current;
+  const boxWidthAnim = useRef(new Animated.Value(0)).current;
+  const contentOpacityAnim = useRef(new Animated.Value(0)).current;
+  const rotationAnim = useRef(new Animated.Value(0)).current;
+  const marqueeAnim = useRef(new Animated.Value(0)).current;
 
   const [statusMessage, setStatusMessage] = useState('BOOTING...');
   const [isOnline, setIsOnline] = useState(true);
@@ -56,6 +45,18 @@ export const BootScreen = ({ onFinish, isReady }: BootScreenProps) => {
   const [minTimeElapsed, setMinTimeElapsed] = useState(false);
 
   useEffect(() => {
+    const timer = setTimeout(() => {
+      setMinTimeElapsed(true);
+    }, 3000); // Reduced to 3s for better UX
+    return () => clearTimeout(timer);
+  }, []);
+
+  const hasStartedAnimations = useRef(false);
+
+  useEffect(() => {
+    if (hasStartedAnimations.current) return;
+    hasStartedAnimations.current = true;
+
     let messageIndex = 0;
     const messageInterval = setInterval(() => {
       if (messageIndex < statusMessages.length - 1) {
@@ -64,88 +65,100 @@ export const BootScreen = ({ onFinish, isReady }: BootScreenProps) => {
       }
     }, 400);
 
-    // Initial animations
-    scale.value = withSpring(1, { damping: 12 });
-    boxWidth.value = withDelay(300, withSpring(SCREEN_WIDTH * 0.85, { damping: 15 }));
-    contentOpacity.value = withDelay(600, withTiming(1, { duration: 400 }));
+    // Sequence animations
+    Animated.spring(scaleAnim, { toValue: 1, damping: 12, useNativeDriver: Platform.OS !== 'web' }).start();
     
-    rotation.value = withRepeat(
-      withTiming(360, { duration: 4000, easing: Easing.linear }),
-      -1,
-      false
-    );
+    setTimeout(() => {
+      Animated.spring(boxWidthAnim, { 
+        toValue: SCREEN_WIDTH * 0.85, 
+        damping: 15, 
+        useNativeDriver: false 
+      }).start();
+    }, 300);
 
-    marqueeX.value = withRepeat(
-      withTiming(-SCREEN_WIDTH, { duration: 6000, easing: Easing.linear }),
-      -1,
-      false
-    );
+    setTimeout(() => {
+      Animated.timing(contentOpacityAnim, { 
+        toValue: 1, 
+        duration: 400, 
+        useNativeDriver: Platform.OS !== 'web' 
+      }).start();
+    }, 600);
+    
+    // Continuous animations
+    Animated.loop(
+      Animated.timing(rotationAnim, { toValue: 360, duration: 4000, useNativeDriver: Platform.OS !== 'web' })
+    ).start();
 
-    glitchY.value = withRepeat(
-      withSequence(
-        withTiming(2, { duration: 50 }),
-        withTiming(-2, { duration: 50 }),
-        withTiming(0, { duration: 50 }),
-        withDelay(2000, withTiming(0, { duration: 0 }))
-      ),
-      -1,
-      false
-    );
+    Animated.loop(
+      Animated.timing(marqueeAnim, { toValue: -SCREEN_WIDTH, duration: 6000, useNativeDriver: Platform.OS !== 'web' })
+    ).start();
 
-    const checkStatus = async () => {
-      try {
-        const response = await fetch('https://www.google.com', { method: 'HEAD', cache: 'no-cache' });
-        setIsOnline(response.ok);
-      } catch (e) {
-        setIsOnline(false);
+    const checkStatus = () => {
+      if (Platform.OS === 'web') {
+        setIsOnline(navigator.onLine);
       }
     };
 
     checkStatus();
 
-    // Set minimum display time
-    const timer = setTimeout(() => {
-      setMinTimeElapsed(true);
-    }, 3500);
-
     return () => {
-      clearTimeout(timer);
       clearInterval(messageInterval);
     };
-  }, []);
+  }, [SCREEN_WIDTH]); // Keep SCREEN_WIDTH but ref prevents restart
 
-  // Separate effect to handle finishing when both conditions are met
+  // Handle exit logic
   useEffect(() => {
+    // Internal safety: if stuck for 7 seconds, force exit
+    const safetyTimer = setTimeout(() => {
+      if (!isReady || !minTimeElapsed) {
+        console.log('BootScreen: Internal safety exit triggered');
+        onFinish();
+      }
+    }, 7000);
+
     if (minTimeElapsed && isReady) {
-      opacity.value = withTiming(0, { duration: 500 }, (finished) => {
-        if (finished) {
-          runOnJS(onFinish)();
-        }
+      clearTimeout(safetyTimer);
+      Animated.timing(fadeAnim, {
+        toValue: 0,
+        duration: 500,
+        useNativeDriver: Platform.OS !== 'web',
+      }).start(() => {
+        onFinish();
       });
+
+      // Extra safety fallback for the animation itself
+      const animTimer = setTimeout(onFinish, 600);
+      return () => {
+        clearTimeout(animTimer);
+        clearTimeout(safetyTimer);
+      };
     }
-  }, [minTimeElapsed, isReady]);
+    return () => clearTimeout(safetyTimer);
+  }, [minTimeElapsed, isReady, onFinish]);
 
-  const containerStyle = useAnimatedStyle(() => ({
-    opacity: opacity.value,
-    transform: [{ scale: scale.value }],
-  }));
+  const containerStyle = {
+    opacity: fadeAnim,
+    transform: [{ scale: scaleAnim }],
+  };
 
-  const logoStyle = useAnimatedStyle(() => ({
-    transform: [{ rotate: `${rotation.value}deg` }],
-  }));
+  const logoStyle = {
+    transform: [{ rotate: rotationAnim.interpolate({
+      inputRange: [0, 360],
+      outputRange: ['0deg', '360deg']
+    }) }],
+  };
 
-  const marqueeStyle = useAnimatedStyle(() => ({
-    transform: [{ translateX: marqueeX.value }],
-  }));
+  const marqueeStyle = {
+    transform: [{ translateX: marqueeAnim }],
+  };
 
-  const boxStyle = useAnimatedStyle(() => ({
-    width: boxWidth.value,
-    transform: [{ translateY: glitchY.value }],
-  }));
+  const boxStyle = {
+    width: boxWidthAnim,
+  };
 
-  const textStyle = useAnimatedStyle(() => ({
-    opacity: contentOpacity.value,
-  }));
+  const textStyle = {
+    opacity: contentOpacityAnim,
+  };
 
   return (
     <Animated.View style={[StyleSheet.absoluteFill, styles.container, { backgroundColor: theme.background }, containerStyle]}>
@@ -214,17 +227,28 @@ export const BootScreen = ({ onFinish, isReady }: BootScreenProps) => {
         <Text style={[styles.smallLabel, { color: theme.text }]}>©2024_INTEL_CORE</Text>
       </View>
 
-      <View style={[styles.scanline, { backgroundColor: theme.text, opacity: 0.03 }]} />
+      <View style={[styles.scanline, { backgroundColor: theme.text, opacity: 0.03 }]} pointerEvents="none" />
     </Animated.View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    zIndex: 9999,
+    zIndex: 99999,
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
+    ...Platform.select({
+      web: {
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        width: '100vw',
+        height: '100vh',
+      }
+    })
   },
   marqueeContainer: {
     position: 'absolute',
@@ -252,11 +276,19 @@ const styles = StyleSheet.create({
   contentBox: {
     borderWidth: 4,
     borderRadius: 0,
-    shadowColor: '#000',
-    shadowOffset: { width: 12, height: 12 },
-    shadowOpacity: 1,
-    shadowRadius: 0,
-    elevation: 20,
+    // Web compatible shadow
+    ...Platform.select({
+      web: {
+        boxShadow: '12px 12px 0px 0px #000',
+      },
+      default: {
+        shadowColor: '#000',
+        shadowOffset: { width: 12, height: 12 },
+        shadowOpacity: 1,
+        shadowRadius: 0,
+        elevation: 20,
+      }
+    }),
     minHeight: 180,
   },
   topBar: {
@@ -340,6 +372,5 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    pointerEvents: 'none',
   },
 });

@@ -1,15 +1,25 @@
 import { BorderWidth, Radius, Shadows, Spacing } from '@/constants/theme';
-import { useThemeColors, useIsDark } from '@/hooks/use-color-scheme';
+import { useThemeColors } from '@/hooks/use-color-scheme';
 import { Tabs } from 'expo-router';
-import { Bookmark, Compass, TrendingUp, Terminal, Lightbulb, User } from 'lucide-react-native';
+import { Compass, TrendingUp, Terminal, Lightbulb, User } from 'lucide-react-native';
 import React from 'react';
-import { StyleSheet, View, Platform, Text } from 'react-native';
+import { StyleSheet, View, Text, useWindowDimensions } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { HapticTab } from '@/components/haptic-tab';
 
 export default function TabLayout() {
   const colors = useThemeColors();
-  const isDark = useIsDark();
+  const { width } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
+  const isCompact = width < 380;
+  const tabBarHorizontal = width < 360 ? Spacing.md : Spacing.lg;
+  const tabBarBottom = Math.max(insets.bottom + Spacing.sm, Spacing.lg);
+  const tabBarHeight = isCompact ? 64 : 72;
+  const iconBoxHeight = isCompact ? 44 : 48;
+  const iconSize = isCompact ? 20 : 22;
+  const activeLabelSize = isCompact ? 12 : 14;
+  const activeLabelSpacing = isCompact ? 6 : 10;
 
   return (
     <Tabs
@@ -23,12 +33,16 @@ export default function TabLayout() {
           {
             backgroundColor: colors.tabBg,
             borderColor: colors.borderStrong,
+            left: tabBarHorizontal,
+            right: tabBarHorizontal,
+            bottom: tabBarBottom,
+            height: tabBarHeight,
           },
         ],
         tabBarShowLabel: false,
-        tabBarSafeAreaInsets: { bottom: 0 },
+        tabBarSafeAreaInsets: { bottom: insets.bottom },
         tabBarItemStyle: {
-          height: 60,
+          height: tabBarHeight - 10,
           justifyContent: 'center',
           alignItems: 'center',
         },
@@ -47,19 +61,21 @@ export default function TabLayout() {
                 styles.iconContainer,
                 focused && styles.iconContainerActive,
                 {
+                  height: iconBoxHeight,
                   backgroundColor: focused ? colors.accent : colors.surface,
                   borderColor: focused ? colors.borderStrong : colors.border,
                 },
+                focused && { gap: activeLabelSpacing },
                 focused && { transform: [{ translateY: -2 }, { translateX: -2 }], ...Shadows.sm }
               ]}
             >
               <Compass
-                size={22}
+                size={iconSize}
                 color={focused ? colors.badgeText : colors.textSecondary}
                 strokeWidth={focused ? 2.5 : 2}
               />
               {focused && (
-                <Text style={[styles.activeText, { color: colors.badgeText }]}>News</Text>
+                <Text style={[styles.activeText, { color: colors.badgeText, fontSize: activeLabelSize }]}>News</Text>
               )}
             </View>
           ),
@@ -75,19 +91,21 @@ export default function TabLayout() {
                 styles.iconContainer,
                 focused && styles.iconContainerActive,
                 {
+                  height: iconBoxHeight,
                   backgroundColor: focused ? colors.accent : colors.surface,
                   borderColor: focused ? colors.borderStrong : colors.border,
                 },
+                focused && { gap: activeLabelSpacing },
                 focused && { transform: [{ translateY: -2 }, { translateX: -2 }], ...Shadows.sm }
               ]}
             >
               <TrendingUp
-                size={22}
+                size={iconSize}
                 color={focused ? colors.badgeText : colors.textSecondary}
                 strokeWidth={focused ? 2.5 : 2}
               />
               {focused && (
-                <Text style={[styles.activeText, { color: colors.badgeText }]}>Market</Text>
+                <Text style={[styles.activeText, { color: colors.badgeText, fontSize: activeLabelSize }]}>Market</Text>
               )}
             </View>
           ),
@@ -103,19 +121,21 @@ export default function TabLayout() {
                 styles.iconContainer,
                 focused && styles.iconContainerActive,
                 {
+                  height: iconBoxHeight,
                   backgroundColor: focused ? colors.accent : colors.surface,
                   borderColor: focused ? colors.borderStrong : colors.border,
                 },
+                focused && { gap: activeLabelSpacing },
                 focused && { transform: [{ translateY: -2 }, { translateX: -2 }], ...Shadows.sm }
               ]}
             >
               <Lightbulb
-                size={22}
+                size={iconSize}
                 color={focused ? colors.badgeText : colors.textSecondary}
                 strokeWidth={focused ? 2.5 : 2}
               />
               {focused && (
-                <Text style={[styles.activeText, { color: colors.badgeText }]}>Ideas</Text>
+                <Text style={[styles.activeText, { color: colors.badgeText, fontSize: activeLabelSize }]}>Ideas</Text>
               )}
             </View>
           ),
@@ -131,19 +151,21 @@ export default function TabLayout() {
                 styles.iconContainer,
                 focused && styles.iconContainerActive,
                 {
+                  height: iconBoxHeight,
                   backgroundColor: focused ? colors.accent : colors.surface,
                   borderColor: focused ? colors.borderStrong : colors.border,
                 },
+                focused && { gap: activeLabelSpacing },
                 focused && { transform: [{ translateY: -2 }, { translateX: -2 }], ...Shadows.sm }
               ]}
             >
               <Terminal
-                size={22}
+                size={iconSize}
                 color={focused ? colors.badgeText : colors.textSecondary}
                 strokeWidth={focused ? 2.5 : 2}
               />
               {focused && (
-                <Text style={[styles.activeText, { color: colors.badgeText }]}>AI</Text>
+                <Text style={[styles.activeText, { color: colors.badgeText, fontSize: activeLabelSize }]}>AI</Text>
               )}
             </View>
           ),
@@ -159,19 +181,21 @@ export default function TabLayout() {
                 styles.iconContainer,
                 focused && styles.iconContainerActive,
                 {
+                  height: iconBoxHeight,
                   backgroundColor: focused ? colors.accent : colors.surface,
                   borderColor: focused ? colors.borderStrong : colors.border,
                 },
+                focused && { gap: activeLabelSpacing },
                 focused && { transform: [{ translateY: -2 }, { translateX: -2 }], ...Shadows.sm }
               ]}
             >
               <User
-                size={22}
+                size={iconSize}
                 color={focused ? colors.badgeText : colors.textSecondary}
                 strokeWidth={focused ? 2.5 : 2}
               />
               {focused && (
-                <Text style={[styles.activeText, { color: colors.badgeText }]}>Profile</Text>
+                <Text style={[styles.activeText, { color: colors.badgeText, fontSize: activeLabelSize }]}>Profile</Text>
               )}
             </View>
           ),
@@ -184,10 +208,6 @@ export default function TabLayout() {
 const styles = StyleSheet.create({
   tabBar: {
     position: 'absolute',
-    bottom: 30,
-    left: 20,
-    right: 20,
-    height: 70,
     borderRadius: Radius.xs,
     borderWidth: BorderWidth.brutalist,
     paddingHorizontal: 12,
@@ -208,7 +228,6 @@ const styles = StyleSheet.create({
   iconContainerActive: {
     paddingHorizontal: 16,
     flexDirection: 'row',
-    gap: 10,
   },
   activeText: {
     fontSize: 14,
