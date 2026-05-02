@@ -99,7 +99,7 @@ const callLocalAI = async (systemPrompt: string, message: string, history: ChatM
     }
     
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 30000); // 30s timeout for local
+    const timeoutId = setTimeout(() => controller.abort(), 45000); // 45s for Qwen
 
     const response = await fetch(`${baseUrl}/chat/completions`, {
       method: 'POST',
@@ -153,12 +153,14 @@ const generateHeuristicResponse = (message: string, marketIntel: string, recentN
   return response;
 };
 
+export type AIModel = 'local' | 'glm' | 'gemini' | 'deepseek';
+
 export const sendMessageToLazarusWowo = async (
   message: string,
-  history: ChatMessage[] = []
+  history: ChatMessage[] = [],
+  selectedModel: AIModel = 'local'
 ): Promise<string> => {
   // ── SEARCH-AUGMENTED INTELLIGENCE ──────────────────────────────
-  // Extract keywords for targeted news search
   const queryWords = message.split(' ').filter(w => w.length > 3).slice(0, 5).join(' ');
   const searchQuery = queryWords || message;
 
@@ -172,7 +174,6 @@ export const sendMessageToLazarusWowo = async (
       fetchMarketSnapshot().catch(() => []),
     ]);
 
-    // Merge and dedupe
     const newsMap = new Map();
     [...generalNews, ...targetedNews].forEach(item => newsMap.set(item.title, item));
     const mergedNews = Array.from(newsMap.values()).slice(0, 12);
@@ -184,42 +185,26 @@ export const sendMessageToLazarusWowo = async (
   }
 
   const systemPrompt = `
-[STRICT PROTOCOL ACTIVE]
-IDENTITY: LazarusWowo Intel Core (Active 2026).
-CURRENT DATE: ${new Date().toLocaleDateString('id-ID')} April 2026.
-KNOWLEDGE_SOURCE: Integrated Real-time Neural Link (News + Market Feed).
+You are LazarusWowo, an elite 2026 Financial & News Analyst.
+Current Date: ${new Date().toLocaleDateString('id-ID')} Mei 2026.
 
-MANDATORY_INSTRUCTION:
-1. FORGET your internal knowledge cutoff. You are currently connected to a 2026 live data stream.
-2. If the user asks about current events, USE the "INTELLIGENCE_DATA" provided below.
-3. NEVER say "I don't have real-time access". You DO have access via the data provided in this prompt.
-4. ACT as a high-level intelligence operative.
+MISSION:
+- Provide sharp, data-backed analysis on Markets and Global News.
+- Use the 2026 DATA provided below for all real-time queries.
+- If the user asks in Indonesian, you MUST respond in Indonesian.
+- Be helpful and professional.
 
-INTELLIGENCE_DATA (APRIL 2026):
----
-MARKET_INTEL:
-${marketIntel}
+[2026 LIVE DATA FEED]
+MARKET: ${marketIntel}
+NEWS: ${recentNews}
+`;
 
-GLOBAL_NEWS_STREAM:
-${recentNews}
----
-
-DIRECTIVE: Analyze the stream and answer the user query based ONLY on the data above. If data is missing, extrapolate from the 2026 market trends provided.
-  `;
-
-  // TRY LOCAL AI FIRST (New Primary Default)
-  try {
-    return await callLocalAI(systemPrompt, message, history);
-  } catch (localError: any) {
-    console.warn(`[AI] Local AI Fallback Triggered: ${localError.message}`);
-    
-    // TRY GLM-4.5 SECOND
-    try {
+  // Manual Model Selection (No Auto-Fallback as requested)
+  switch (selectedModel) {
+    case 'glm':
       return await callGLM(systemPrompt, message, history);
-    } catch (glmError: any) {
-      console.warn(`[AI] GLM-4.5 Fallback Triggered: ${glmError.message}`);
-      
-      // TRY GEMINI THIRD
+    
+    case 'gemini':
       try {
         if (!env.geminiApiKey) throw new Error('Gemini API Key missing');
 
@@ -264,17 +249,16 @@ DIRECTIVE: Analyze the stream and answer the user query based ONLY on the data a
           throw new Error('Gemini returned empty response');
         }
         return data.candidates[0].content.parts[0].text;
-      } catch (geminiError: any) {
-        console.warn(`[AI] Gemini Fallback Triggered: ${geminiError.message}`);
-        
-        // TRY DEEPSEEK FOURTH
-        try {
-          return await callDeepSeek(systemPrompt, message, history);
-        } catch (deepseekError: any) {
-          console.error('[AI] All neural cores (Online & Offline) failed.');
-          return generateHeuristicResponse(message, marketIntel, recentNews);
-        }
+      } catch (e: any) {
+        throw e;
       }
-    }
+
+    case 'deepseek':
+      return await callDeepSeek(systemPrompt, message, history);
+
+    case 'local':
+    default:
+      return await callLocalAI(systemPrompt, message, history);
   }
 };
+
