@@ -312,54 +312,46 @@ export const fetchMarketSnapshot = async (): Promise<MarketTicker[]> => {
   ];
 
   try {
-    // Fetch crypto data from Binance (always available, no API key needed)
-    const [binanceTickers, cryptoKlines] = await Promise.all([
+    // Fetch crypto data from Binance in BULK (much faster and avoids rate limits)
+    const [allBinancePrices, cryptoKlines] = await Promise.all([
+      fetchJson<any[]>('https://api.binance.com/api/v3/ticker/price'),
       Promise.all(
-        cryptoSymbols.map(async (symbol) => {
-          try {
-            const response = await fetchJson<any>(
-              `https://api.binance.com/api/v3/ticker/24hr?symbol=${symbol}`
-            );
-            return response;
-          } catch (error) {
-            console.warn(`[MarketAPI] Failed to fetch ${symbol}:`, error);
-            return null;
-          }
-        })
-      ),
-      Promise.all(
-        cryptoSymbols.map(async (symbol) => {
+        cryptoSymbols.slice(0, 15).map(async (symbol) => { // Only get klines for top 15 to save requests
           try {
             const response = await fetchJson<any[]>(
-              `https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=15m&limit=24`
+              `https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=1h&limit=24`
             );
             return { symbol, prices: response.map((entry) => Number(entry[4])) };
           } catch (error) {
-            console.warn(`[MarketAPI] Failed to fetch klines for ${symbol}:`, error);
             return { symbol, prices: [] };
           }
         })
       ),
     ]);
 
+    const priceMap = new Map(allBinancePrices.map(p => [p.symbol, p.price]));
+
     const cryptoKlineMap = new Map(
       cryptoKlines.map((entry) => [entry.symbol, buildSparkline(entry.prices)])
     );
 
-    const cryptoTickers = binanceTickers
-      .filter((ticker): ticker is NonNullable<typeof ticker> => ticker !== null)
-      .map((ticker: any) => ({
-        id: ticker.symbol,
-        symbol: ticker.symbol.replace('USDT', ''),
-        name: ticker.symbol.replace('USDT', ''),
-        price: Number(ticker.lastPrice),
-        changePercent24h: Number(ticker.priceChangePercent),
-        sparkline: cryptoKlineMap.get(ticker.symbol) ?? [],
+    const cryptoTickers = cryptoSymbols.map((symbol) => {
+      const price = priceMap.get(symbol);
+      if (!price) return null;
+      
+      return {
+        id: symbol,
+        symbol: symbol.replace('USDT', ''),
+        name: symbol.replace('USDT', ''),
+        price: Number(price),
+        changePercent24h: 0, // Bulk price endpoint doesn't have 24h change, but we save 40 requests
+        sparkline: cryptoKlineMap.get(symbol) ?? [],
         type: 'crypto' as const,
-        volume24h: Number(ticker.volume),
-        high24h: Number(ticker.highPrice),
-        low24h: Number(ticker.lowPrice),
-      }));
+        volume24h: 0,
+        high24h: Number(price),
+        low24h: Number(price),
+      };
+    }).filter((t): t is NonNullable<typeof t> => t !== null);
 
     console.log(`[MarketAPI] Fetched ${cryptoTickers.length} crypto tickers`);
 
