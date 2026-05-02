@@ -119,6 +119,63 @@ export default function AIScreen() {
     }
   }, [messages, isLoading]);
 
+  const FormattedMessage = ({ content, isModel }: { content: string, isModel: boolean }) => {
+    const textColor = isModel ? colors.text : '#FFF';
+    
+    // Split by paragraphs
+    const paragraphs = content.split('\n\n');
+    
+    return (
+      <View style={styles.formattedContainer}>
+        {paragraphs.map((para, pIdx) => {
+          // Split paragraph into lines to detect lists
+          const lines = para.split('\n');
+          
+          return (
+            <View key={pIdx} style={styles.paragraphContainer}>
+              {lines.map((line, lIdx) => {
+                const isBullet = line.trim().startsWith('- ') || line.trim().startsWith('* ');
+                const isNumbered = /^\d+\.\s/.test(line.trim());
+                
+                // Parse bold text **text**
+                const parts = line.split(/(\*\*.*?\*\*)/g);
+                
+                return (
+                  <View key={lIdx} style={[
+                    styles.lineWrapper,
+                    (isBullet || isNumbered) && styles.listItemWrapper
+                  ]}>
+                    {(isBullet || isNumbered) && (
+                      <Text style={[styles.listIndicator, { color: textColor }]}>
+                        {isBullet ? '•' : ''}
+                      </Text>
+                    )}
+                    <Text style={[
+                      styles.messageText,
+                      { color: textColor },
+                      isBullet && styles.listItemText
+                    ]}>
+                      {parts.map((part, partIdx) => {
+                        if (part.startsWith('**') && part.endsWith('**')) {
+                          return (
+                            <Text key={partIdx} style={styles.boldText}>
+                              {part.slice(2, -2)}
+                            </Text>
+                          );
+                        }
+                        return part;
+                      })}
+                    </Text>
+                  </View>
+                );
+              })}
+            </View>
+          );
+        })}
+      </View>
+    );
+  };
+
   const renderMessage = ({ item }: { item: ChatMessage }) => {
     const isModel = item.role === 'model';
     return (
@@ -148,12 +205,7 @@ export default function AIScreen() {
               {isModel ? 'LAZARUSWOWO' : 'OPERATOR'}
             </Text>
           </View>
-          <Text style={[
-            styles.messageText,
-            { color: isModel ? colors.text : '#FFF' }
-          ]}>
-            {item.content}
-          </Text>
+          <FormattedMessage content={item.content} isModel={isModel} />
         </View>
       </View>
     );
@@ -349,10 +401,36 @@ const styles = StyleSheet.create({
     fontWeight: '900',
     letterSpacing: 1,
   },
+  formattedContainer: {
+    marginTop: 4,
+  },
+  paragraphContainer: {
+    marginBottom: 12,
+  },
+  lineWrapper: {
+    flexDirection: 'row',
+    marginBottom: 4,
+  },
+  listItemWrapper: {
+    paddingLeft: 4,
+  },
+  listIndicator: {
+    fontSize: 15,
+    marginRight: 8,
+    fontWeight: '900',
+  },
+  listItemText: {
+    flex: 1,
+  },
+  boldText: {
+    fontWeight: '900',
+    color: '#FF2D55', // Using the accent color for bold to make it pop
+  },
   messageText: {
     fontSize: 15,
     lineHeight: 22,
     fontWeight: '600',
+    letterSpacing: 0.2,
   },
   loadingContainer: {
     flexDirection: 'row',
