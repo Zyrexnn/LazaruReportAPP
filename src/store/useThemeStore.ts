@@ -1,7 +1,7 @@
-import { create } from 'zustand';
-import type { ThemeName } from '@/constants/theme';
+import type { ThemeName } from "@/constants/theme";
+import { create } from "zustand";
 
-const THEME_ORDER: ThemeName[] = ['snow', 'obsidian', 'ocean', 'forest'];
+const THEME_ORDER: ThemeName[] = ["snow", "obsidian", "ocean", "forest"];
 
 type ThemeState = {
   themeName: ThemeName;
@@ -10,7 +10,7 @@ type ThemeState = {
 };
 
 export const useThemeStore = create<ThemeState>((set) => ({
-  themeName: 'snow', // default to white/snow theme
+  themeName: "snow", // default to white/snow theme
   setTheme: (name) => set({ themeName: name }),
   cycleTheme: () =>
     set((state) => {
