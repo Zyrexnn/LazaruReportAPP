@@ -53,6 +53,13 @@ export default function LoginScreen() {
       if (error || !data) {
         Alert.alert('Access Denied', 'Invalid token. Please check your credentials.');
       } else {
+        if (data.expires_at) {
+          const expirationDate = new Date(data.expires_at);
+          if (new Date() > expirationDate) {
+            Alert.alert('Access Denied', 'Your token has expired. Please contact the administrator.');
+            return;
+          }
+        }
         setUser({
           id: data.id,
           username: data.username,
