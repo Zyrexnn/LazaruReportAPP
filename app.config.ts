@@ -19,6 +19,8 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       cmcApiKey: process.env.CMC_API_KEY,
       geminiApiKey: process.env.GEMINI_API_KEY,
       deepseekApiKey: process.env.DEEPSEEK_API_KEY,
+      zhipuApiKey: process.env.ZHIPU_API_KEY,
+      localAiUrl: process.env.LOCAL_AI_URL || 'http://127.0.0.1:1234/v1',
     },
   },
 });

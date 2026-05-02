@@ -10,6 +10,8 @@ type ApiKeys = {
   cmcApiKey?: string;
   geminiApiKey?: string;
   deepseekApiKey?: string;
+  zhipuApiKey?: string;
+  localAiUrl?: string;
   supabaseUrl?: string;
   supabaseAnonKey?: string;
 };
@@ -26,6 +28,8 @@ export const env = {
   cmcApiKey: extra.apiKeys?.cmcApiKey ?? '',
   geminiApiKey: extra.apiKeys?.geminiApiKey ?? '',
   deepseekApiKey: extra.apiKeys?.deepseekApiKey ?? '',
+  zhipuApiKey: extra.apiKeys?.zhipuApiKey ?? '',
+  localAiUrl: extra.apiKeys?.localAiUrl ?? 'http://127.0.0.1:1234/v1',
   supabaseUrl: process.env.VITE_SUPABASE_URL || extra.apiKeys?.supabaseUrl || 'https://qfuzfrhqjlmtdmnpfuub.supabase.co',
   supabaseAnonKey: process.env.VITE_SUPABASE_PUBLISHABLE_KEY || extra.apiKeys?.supabaseAnonKey || 'sb_publishable_alCpeChSE0nvvfIBxJOiIg_YObJC41y',
 };
