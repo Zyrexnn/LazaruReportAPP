@@ -160,14 +160,27 @@ export const sendMessageToLazarusWowo = async (
   history: ChatMessage[] = [],
   selectedModel: AIModel = 'local'
 ): Promise<string> => {
-  // ── SEARCH-AUGMENTED INTELLIGENCE ──────────────────────────────
-  const queryWords = message.split(' ').filter(w => w.length > 3).slice(0, 5).join(' ');
-  const searchQuery = queryWords || message;
+  // ── SEARCH-AUGMENTED INTELLIGENCE (SMART KEYWORD EXTRACTION) ──
+  const stopwords = [
+    'berita', 'tentang', 'dengan', 'gimana', 'apakah', 'masih', 'atau', 'sudah', 
+    'dan', 'di', 'ke', 'dari', 'yang', 'untuk', 'ini', 'itu', 'apa', 'siapa', 
+    'kapan', 'bagaimana', 'mengapa', 'kenapa', 'ada', 'terbaru', 'hari', 'saat', 'sekarang'
+  ];
+  
+  const extractedKeywords = message
+    .toLowerCase()
+    .split(/[^a-z0-9]+/i)
+    .filter(w => w.length > 2 && !stopwords.includes(w))
+    .slice(0, 4)
+    .join(' ');
+
+  const searchQuery = extractedKeywords || 'terkini';
 
   let recentNews = "No news data available.";
   let marketIntel = "No market data available.";
 
   try {
+    // We fetch general news and specifically targeted news
     const [generalNews, targetedNews, market] = await Promise.all([
       fetchUnifiedNews().catch(() => []),
       fetchUnifiedNews(searchQuery).catch(() => []),
@@ -176,33 +189,42 @@ export const sendMessageToLazarusWowo = async (
 
     const newsMap = new Map();
     [...generalNews, ...targetedNews].forEach(item => newsMap.set(item.title, item));
-    const mergedNews = Array.from(newsMap.values()).slice(0, 12);
+    const mergedNews = Array.from(newsMap.values()).slice(0, 15);
 
     recentNews = mergedNews.map(n => `[${n.source}] ${n.title}: ${n.summary.slice(0, 150)}...`).join('\n');
-    marketIntel = market.slice(0, 12).map(m => `- ${m.symbol}: $${m.price} (${m.changePercent24h.toFixed(2)}%)`).join('\n');
+    marketIntel = market.slice(0, 15).map(m => `- ${m.symbol}: $${m.price} (${m.changePercent24h.toFixed(2)}%)`).join('\n');
   } catch (e) {
     console.warn('AI Context fetch failed');
   }
 
-  const systemPrompt = `
-You are LazarusWowo, an elite 2026 Financial & News Analyst.
-Current Date: ${new Date().toLocaleDateString('id-ID')} Mei 2026.
+  const systemPrompt = `You are LazarusWowo, an elite Financial & News Analyst.
+The current date is strictly ${new Date().toLocaleDateString('id-ID')} 2026. 
+You MUST answer entirely in the language the user speaks (e.g., Indonesian). 
+Never say your knowledge is cut off in 2023, because you have live access to 2026 data.`;
 
-MISSION:
-- Provide sharp, data-backed analysis on Markets and Global News.
-- Use the 2026 DATA provided below for all real-time queries.
-- If the user asks in Indonesian, you MUST respond in Indonesian.
-- Be helpful and professional.
+  const augmentedUserMessage = `
+=== 2026 LIVE DATA & NEWS FEED ===
+[MARKET INTEL]
+${marketIntel}
 
-[2026 LIVE DATA FEED]
-MARKET: ${marketIntel}
-NEWS: ${recentNews}
+[LATEST NEWS]
+${recentNews}
+==================================
+
+INSTRUCTIONS FOR AI:
+1. You MUST prioritize the LIVE DATA above to answer the user's question.
+2. If the user asks about current events, prices, or news, assume the year is 2026 and use the provided data.
+3. If the provided news is highly relevant, summarize it professionally.
+4. If the data does not explicitly contain the answer, you can combine it with your general knowledge but DO NOT hallucinate fake news. Tell the user what you found based on the latest context.
+
+USER QUESTION:
+${message}
 `;
 
-  // Manual Model Selection (No Auto-Fallback as requested)
+  // Manual Model Selection
   switch (selectedModel) {
     case 'glm':
-      return await callGLM(systemPrompt, message, history);
+      return await callGLM(systemPrompt, augmentedUserMessage, history);
     
     case 'gemini':
       try {
@@ -215,7 +237,7 @@ NEWS: ${recentNews}
           })),
           {
             role: 'user',
-            parts: [{ text: `CONTEXT_INSTRUCTION: ${systemPrompt}\n\nUSER_QUERY: ${message}` }]
+            parts: [{ text: `CONTEXT_INSTRUCTION: ${systemPrompt}\n\n${augmentedUserMessage}` }]
           }
         ];
 
@@ -254,11 +276,11 @@ NEWS: ${recentNews}
       }
 
     case 'deepseek':
-      return await callDeepSeek(systemPrompt, message, history);
+      return await callDeepSeek(systemPrompt, augmentedUserMessage, history);
 
     case 'local':
     default:
-      return await callLocalAI(systemPrompt, message, history);
+      return await callLocalAI(systemPrompt, augmentedUserMessage, history);
   }
 };
 
